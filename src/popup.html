@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main>
+    <img id="thumbnail" alt="今日 Bing 壁纸" hidden />
+    <h1 id="title">Bing Wallpaper HD</h1>
+    <p id="copyright" class="muted"></p>
+    <dl id="details" hidden>
+      <div><dt>分辨率</dt><dd id="size"></dd></div>
+      <div><dt>显示器</dt><dd id="device"></dd></div>
+      <div><dt>更新时间</dt><dd id="updated"></dd></div>
+    </dl>
+    <p id="message" class="muted"></p>
+    <div id="history"></div>
+    <button id="fetch" type="button">立即获取</button>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

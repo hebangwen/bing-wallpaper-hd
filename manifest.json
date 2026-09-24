@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Bing Wallpaper HD",
+  "version": "1.0.0",
+  "description": "每天自动下载 Bing 每日一图，按显示器原生分辨率选择最适配的图像。",
+  "permissions": ["alarms", "offscreen", "storage"],
+  "host_permissions": ["https://www.bing.com/*"],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "chrome_url_overrides": {
+    "newtab": "src/newtab.html"
+  },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

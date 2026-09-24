@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>新标签页</title>
+  <link rel="stylesheet" href="newtab.css" />
+</head>
+<body>
+  <img id="wallpaper" alt="" />
+  <form id="search" action="https://www.bing.com/search" method="get" role="search">
+    <div id="engine">
+      <button type="button" id="engine-toggle" aria-haspopup="listbox" aria-expanded="false">
+        <span id="engine-label"></span>
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+        </svg>
+      </button>
+      <ul id="engine-menu" role="listbox" hidden></ul>
+    </div>
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/>
+    </svg>
+    <input type="search" name="q" placeholder="搜索" autocomplete="off" autofocus />
+  </form>
+  <p id="caption"></p>
+  <script type="module" src="newtab.js"></script>
+</body>
+</html>

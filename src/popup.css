@@ -1,0 +1,76 @@
+body {
+  width: 320px;
+  margin: 0;
+  font-family: -apple-system, "PingFang SC", sans-serif;
+}
+
+main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 15px;
+  margin: 0;
+}
+
+#thumbnail {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.muted {
+  color: #666;
+  font-size: 12px;
+  margin: 0;
+}
+
+#details {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+#details div {
+  display: flex;
+  gap: 8px;
+}
+
+#details dt {
+  color: #666;
+  min-width: 48px;
+}
+
+#details dd {
+  margin: 0;
+}
+
+button {
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #00818a;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+#history {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+#history img {
+  height: 44px;
+  border-radius: 4px;
+  cursor: pointer;
+}
