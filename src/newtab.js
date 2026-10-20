@@ -1,4 +1,6 @@
-import { getAllImages } from "./store.js";
+import { getLatestImage } from "./store.js";
+import { resolveSiteIcons } from "./site-icons.js";
+import { topSitesFrom } from "./top-sites.js";
 
 const ENGINES = {
   bing: { label: "Bing", action: "https://www.bing.com/search", param: "q" },
@@ -55,20 +57,86 @@ document.addEventListener("keydown", (event) => {
 
 applyEngine((await chrome.storage.local.get("searchEngine")).searchEngine);
 
+async function showTopSites() {
+  const nav = document.getElementById("top-sites");
+  let rawSites;
+  try {
+    rawSites = await chrome.topSites.get();
+  } catch {
+    return;
+  }
+
+  const sites = topSitesFrom(rawSites);
+  if (sites.length === 0) return;
+
+  const icons = new Map();
+  nav.replaceChildren(
+    ...sites.map((site) => {
+      const link = document.createElement("a");
+      link.href = site.url;
+      link.title = site.name;
+
+      const icon = document.createElement("img");
+      const favicon = new URL(chrome.runtime.getURL("/_favicon/"));
+      favicon.searchParams.set("pageUrl", site.url);
+      favicon.searchParams.set("size", "32");
+      icon.src = favicon.toString();
+      icon.alt = "";
+      icon.width = 20;
+      icon.height = 20;
+      icons.set(site.host, icon);
+
+      const name = document.createElement("span");
+      name.textContent = site.name;
+
+      link.append(icon, name);
+      return link;
+    }),
+  );
+  nav.hidden = false;
+
+  resolveSiteIcons(sites, (site, iconUrl) => {
+    icons.get(site.host).src = iconUrl;
+  }).catch(() => {});
+}
+
+showTopSites();
+
+let wallpaperUrl;
+
+function setWallpaper(blob) {
+  if (wallpaperUrl) URL.revokeObjectURL(wallpaperUrl);
+  wallpaperUrl = URL.createObjectURL(blob);
+  document.getElementById("wallpaper").src = wallpaperUrl;
+}
+
+addEventListener("pagehide", () => {
+  if (!wallpaperUrl) return;
+  URL.revokeObjectURL(wallpaperUrl);
+  wallpaperUrl = undefined;
+});
+
 async function showLatest() {
-  const images = (await getAllImages()).sort((a, b) => b.fetchedAt - a.fetchedAt);
-  const latest = images[0];
+  const latest = await getLatestImage();
   if (!latest) return false;
-  document.getElementById("wallpaper").src = URL.createObjectURL(latest.blob);
-  document.getElementById("caption").textContent = `${latest.title} · ${latest.copyright}`;
+  setWallpaper(latest.blob);
+  document.getElementById("caption").textContent = [latest.title, latest.copyright]
+    .filter(Boolean)
+    .join(" · ");
   return true;
 }
 
-if (!(await showLatest())) {
-  const response = await chrome.runtime.sendMessage({ type: "fetch-now" });
-  if (response?.ok) {
-    await showLatest();
-  } else {
-    document.getElementById("caption").textContent = "壁纸获取失败，请稍后重试";
+try {
+  if (!(await showLatest())) {
+    let fetched = false;
+    try {
+      fetched = Boolean((await chrome.runtime.sendMessage({ type: "fetch-now" }))?.ok);
+    } catch {}
+
+    if (!fetched || !(await showLatest())) {
+      document.getElementById("caption").textContent = "壁纸获取失败，请稍后重试";
+    }
   }
+} catch {
+  document.getElementById("caption").textContent = "壁纸读取失败，请刷新重试";
 }
