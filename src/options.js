@@ -1,7 +1,7 @@
-import { applyI18n, t } from "./i18n.js";
+import { applyI18n, initI18n, t } from "./i18n.js";
 import {
   DATE_STYLES,
-  MARKETS,
+  LANGUAGES,
   PRESET_QUALITIES,
   SOURCE_IDS,
   loadSettings,
@@ -24,12 +24,10 @@ const QUALITY_LABELS = {
   "1280x720": "1280×720",
 };
 
-const MARKET_LABELS = {
-  "zh-CN": "简体中文",
-  "en-US": "English (US)",
-  "ja-JP": "日本語",
-  "de-DE": "Deutsch",
-  "fr-FR": "Français",
+const LANGUAGE_LABEL_KEYS = {
+  auto: "languageAuto",
+  "zh-CN": "languageZh",
+  en: "languageEn",
 };
 
 const DATE_STYLE_KEYS = {
@@ -45,7 +43,7 @@ const quality = document.getElementById("quality");
 const customRow = document.getElementById("custom-quality");
 const customWidth = document.getElementById("custom-width");
 const customHeight = document.getElementById("custom-height");
-const market = document.getElementById("market");
+const language = document.getElementById("language");
 const retention = document.getElementById("retention");
 const hour = document.getElementById("hour");
 const showClock = document.getElementById("show-clock");
@@ -112,9 +110,9 @@ function applyToControls() {
   customHeight.value = String(height);
 
   fillSelect(
-    market,
-    MARKETS.map((value) => [value, MARKET_LABELS[value] ?? value]),
-    settings.market,
+    language,
+    LANGUAGES.map((value) => [value, t(LANGUAGE_LABEL_KEYS[value])]),
+    settings.language,
   );
   fillSelect(
     retention,
@@ -213,6 +211,8 @@ function update(patch) {
   saveChain = saveChain
     .then(async () => {
       await saveSettings(snapshot);
+      await initI18n(snapshot.language);
+      applyI18n();
       applyToControls();
       await chrome.runtime.sendMessage({ type: "reschedule" }).catch(() => {});
       flash(t("saved"));
@@ -240,8 +240,9 @@ async function clear(keepFavorites) {
   }
 }
 
-applyI18n();
 settings = await loadSettings();
+await initI18n(settings.language);
+applyI18n();
 applyToControls();
 await Promise.all([refreshStats(), loadPreviewImage()]);
 
@@ -274,7 +275,7 @@ document.getElementById("apply-quality").addEventListener("click", () => {
   update({ quality: size });
 });
 
-market.addEventListener("change", () => update({ market: market.value }));
+language.addEventListener("change", () => update({ language: language.value }));
 retention.addEventListener("change", () => update({ retentionDays: Number(retention.value) }));
 hour.addEventListener("change", () => update({ updateHour: Number(hour.value) }));
 showClock.addEventListener("change", () => update({ showClock: showClock.checked }));

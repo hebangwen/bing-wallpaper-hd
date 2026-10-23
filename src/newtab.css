@@ -15,7 +15,7 @@ body {
   transform: scale(var(--wallpaper-scale, 1));
 }
 
-/* 整页毛玻璃：模糊壁纸本身，内容保持清晰 */
+/* 整页毛玻璃：模糊 + 提饱和 + 顶部高光 + 细噪点，贴近系统级磨砂质感 */
 body::before {
   content: "";
   position: fixed;
@@ -23,13 +23,21 @@ body::before {
   z-index: 1;
   pointer-events: none;
   opacity: 0;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(1.4);
-  transition: opacity 0.25s ease;
+  background-color: rgba(255, 255, 255, 0.03);
+  background-image:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+  background-size: auto, 160px 160px;
+  backdrop-filter: blur(30px) saturate(1.45) brightness(1.02);
+  transition: opacity 0.35s ease;
 }
 
 :root[data-glass="on"] body::before {
   opacity: 1;
+}
+
+:root[data-glass="on"][data-tone="light"] body::before {
+  background-color: rgba(15, 20, 25, 0.12);
 }
 
 /* 暗化遮罩位于玻璃层与内容之间 */
@@ -43,10 +51,14 @@ body::after {
 }
 
 #clock,
-#search,
 #top-sites,
 #caption {
   z-index: 3;
+}
+
+/* 搜索框层级要压住下方的站点图标，否则下拉菜单会被遮住 */
+#search {
+  z-index: 4;
 }
 
 #clock {

@@ -22,9 +22,9 @@ test("formats 12-hour time with localized period labels", () => {
 
 test("formats the date line per locale", () => {
   const date = at(21, 5, 9);
-  assert.equal(formatDateLine(date, "long", "zh-CN"), "2026年10月23日星期五");
+  assert.equal(formatDateLine(date, "long", "zh-CN"), "2026年10月23日 星期五");
   assert.equal(formatDateLine(date, "long", "en-US"), "Friday, October 23, 2026");
   assert.equal(formatDateLine(date, "numeric"), "2026-10-23");
   assert.equal(formatDateLine(date, "hidden"), "");
-  assert.equal(formatDateLine(date), "2026年10月23日星期五");
+  assert.equal(formatDateLine(date), "2026年10月23日 星期五");
 });

@@ -29,6 +29,17 @@ export function formatDateLine(date, style = "long", locale = "zh-CN") {
     return `${year}-${pad(month)}-${pad(day)}`;
   }
 
+  const language = String(locale).toLowerCase();
+  if (language.startsWith("zh")) {
+    const datePart = new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+    const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
+    return `${datePart} ${weekday}`;
+  }
+
   return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "long",

@@ -1,7 +1,7 @@
 export const PRESET_QUALITIES = ["UHD", "1920x1200", "1920x1080", "1366x768", "1280x720"];
 export const QUALITIES = PRESET_QUALITIES;
 export const HISTORY_QUALITY = "1920x1080";
-export const MARKETS = ["zh-CN", "en-US", "ja-JP", "de-DE", "fr-FR"];
+export const LANGUAGES = ["auto", "zh-CN", "en"];
 export const DATE_STYLES = ["long", "numeric", "hidden"];
 export const SOURCE_IDS = ["bing", "wikimedia-en", "wikimedia-zh"];
 export const MAX_BACKFILL_DAYS = 8;
@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS = {
   quality: "UHD",
   retentionDays: 7,
   updateHour: 6,
-  market: "zh-CN",
+  language: "auto",
   showClock: true,
   showSeconds: true,
   hour24: true,
@@ -40,6 +40,20 @@ function clampInt(value, min, max, fallback) {
 
 function asBoolean(value, fallback) {
   return typeof value === "boolean" ? value : fallback;
+}
+
+// 旧版本只有 market（Bing mkt），迁移到界面语言。
+function normalizeLanguageSetting(value, legacyMarket) {
+  if (LANGUAGES.includes(value)) return value;
+  if (legacyMarket === "zh-CN") return "zh-CN";
+  if (legacyMarket === "en-US") return "en";
+  return "auto";
+}
+
+export function marketFor(language, uiLanguage = "zh-CN") {
+  if (language === "zh-CN") return "zh-CN";
+  if (language === "en") return "en-US";
+  return String(uiLanguage).toLowerCase().startsWith("zh") ? "zh-CN" : "en-US";
 }
 
 // 接受预设档位或 320×240 ~ 7680×4320 内的任意宽高，非法值返回 null。
@@ -73,7 +87,7 @@ export function normalizeSettings(raw) {
     quality: parseQuality(settings.quality) ?? DEFAULT_SETTINGS.quality,
     retentionDays: clampInt(settings.retentionDays, 1, 30, DEFAULT_SETTINGS.retentionDays),
     updateHour: clampInt(settings.updateHour, 0, 23, DEFAULT_SETTINGS.updateHour),
-    market: MARKETS.includes(settings.market) ? settings.market : DEFAULT_SETTINGS.market,
+    language: normalizeLanguageSetting(settings.language, settings.market),
     showClock: asBoolean(settings.showClock, DEFAULT_SETTINGS.showClock),
     showSeconds: asBoolean(settings.showSeconds, DEFAULT_SETTINGS.showSeconds),
     hour24: asBoolean(settings.hour24, DEFAULT_SETTINGS.hour24),

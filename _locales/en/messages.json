@@ -258,6 +258,15 @@
     "message": "Language"
   },
   "languageHint": {
-    "message": "Language of the Bing title and copyright text; the image is usually the same."
+    "message": "Interface language and the language of Bing titles."
+  },
+  "languageAuto": {
+    "message": "Follow browser"
+  },
+  "languageZh": {
+    "message": "简体中文"
+  },
+  "languageEn": {
+    "message": "English"
   }
 }

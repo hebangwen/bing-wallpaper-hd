@@ -1,7 +1,9 @@
-import { applyI18n, t } from "./i18n.js";
+import { applyI18n, initI18n, t } from "./i18n.js";
 import { getPinned, setPinned } from "./pin.js";
+import { loadSettings } from "./settings.js";
 import { getAllImages, setFavorite } from "./store.js";
 
+await initI18n((await loadSettings()).language);
 applyI18n();
 
 const objectUrls = new Map();

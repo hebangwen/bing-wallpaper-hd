@@ -258,6 +258,15 @@
     "message": "语言"
   },
   "languageHint": {
-    "message": "影响 Bing 壁纸标题与版权文案的语言，图片通常相同。"
+    "message": "界面语言与 Bing 壁纸文案语言。"
+  },
+  "languageAuto": {
+    "message": "跟随浏览器"
+  },
+  "languageZh": {
+    "message": "简体中文"
+  },
+  "languageEn": {
+    "message": "English"
   }
 }

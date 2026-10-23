@@ -1,4 +1,4 @@
-import { t } from "./i18n.js";
+import { initI18n, t } from "./i18n.js";
 import { fetchWithRetry } from "./network.js";
 import { getSource } from "./sources/index.js";
 import {
@@ -12,6 +12,7 @@ import {
   loadSettings,
   normalizeSettings,
   nextRunAt,
+  marketFor,
   qualityFor,
   retentionMsFor,
 } from "./settings.js";
@@ -105,12 +106,13 @@ async function downloadOne(entry, size, source) {
 
 async function syncWallpapers() {
   const settings = await loadSettings();
+  await initI18n(settings.language);
   await deleteExpiredImages(Date.now(), retentionMsFor(settings.retentionDays));
 
   const source = getSource(settings.source);
   const entries = await source.listImages({
     count: backfillCount(settings.retentionDays),
-    market: settings.market,
+    market: marketFor(settings.language),
     now: new Date(),
   });
   if (entries.length === 0) throw new Error(t("noWallpaper"));

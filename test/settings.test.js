@@ -6,6 +6,7 @@ import {
   QUALITIES,
   backfillCount,
   nextRunAt,
+  marketFor,
   normalizeSettings,
   parseQuality,
   qualityFor,
@@ -22,13 +23,13 @@ test("keeps valid values and clamps numeric ranges", () => {
     quality: "1920x1080",
     retentionDays: 14,
     updateHour: 21,
-    market: "en-US",
+    language: "en",
   });
 
   assert.equal(settings.quality, "1920x1080");
   assert.equal(settings.retentionDays, 14);
   assert.equal(settings.updateHour, 21);
-  assert.equal(settings.market, "en-US");
+  assert.equal(settings.language, "en");
   assert.equal(settings.showClock, true);
 
   assert.equal(normalizeSettings({ retentionDays: 0 }).retentionDays, 1);
@@ -38,9 +39,27 @@ test("keeps valid values and clamps numeric ranges", () => {
   assert.equal(normalizeSettings({ updateHour: 24 }).updateHour, 23);
 });
 
-test("rejects unknown quality and market values", () => {
+test("rejects unknown quality and language values", () => {
   assert.equal(normalizeSettings({ quality: "8k" }).quality, DEFAULT_SETTINGS.quality);
-  assert.equal(normalizeSettings({ market: "xx-XX" }).market, DEFAULT_SETTINGS.market);
+  assert.equal(normalizeSettings({ language: "xx-XX" }).language, DEFAULT_SETTINGS.language);
+});
+
+test("migrates the legacy market setting to a language", () => {
+  assert.equal(normalizeSettings({ market: "zh-CN" }).language, "zh-CN");
+  assert.equal(normalizeSettings({ market: "en-US" }).language, "en");
+  assert.equal(normalizeSettings({ market: "ja-JP" }).language, "auto");
+  assert.equal(
+    normalizeSettings({ language: "en", market: "zh-CN" }).language,
+    "en",
+  );
+});
+
+test("maps a language to the Bing market", () => {
+  assert.equal(marketFor("zh-CN"), "zh-CN");
+  assert.equal(marketFor("en"), "en-US");
+  assert.equal(marketFor("auto", "zh-CN"), "zh-CN");
+  assert.equal(marketFor("auto", "en-US"), "en-US");
+  assert.equal(marketFor("auto", "ja-JP"), "en-US");
 });
 
 test("accepts a custom resolution inside the supported range", () => {

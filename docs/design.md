@@ -4,7 +4,7 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 
 | 模块 | 职责 |
 | --- | --- |
-| `src/settings.js` | 设置默认值与校验：画质（预设或自定义宽高）、保留天数、更新时间、地区、图源、日期时间显示、模糊/暗化/毛玻璃；历史图画质上限 1080p；下一次运行时间 |
+| `src/settings.js` | 设置默认值与校验：画质（预设或自定义宽高）、保留天数、更新时间、语言、图源、日期时间显示、模糊/暗化/毛玻璃；历史图画质上限 1080p；下一次运行时间 |
 | `src/bing.js` | Bing HPImageArchive 接口，解析归档（保留 `copyrightlink` / `drk`）；预设画质用原生资源，自定义宽高走 `&w=&h=&rs=1&c=4` 服务端缩放 |
 | `src/sources/*` | 图源适配层：Bing 归档、Wikimedia 每日图片（英文/中文，下载 1920px 缩略图）；统一返回 `urlbase`、`downloadUrl`、`source` |
 | `src/i18n.js` | `chrome.i18n` 封装：读取文案、按 `data-i18n` 填充 HTML、返回当前 UI 语言 |
@@ -41,7 +41,7 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 
 多图源：`SOURCES` 暴露 `listImages()` 与 `imageUrl()`，Bing 走 `urlbase + 画质后缀`，Wikimedia 走每日 feed 并把 `thumbnail` 升到 1920px，避免下载几十 MB 原图。切换图源会删除其它源且未收藏的图片，保证新标签页展示的是当前源。
 
-多语言：所有界面文案集中在 `_locales/zh_CN` 与 `_locales/en`，HTML 用 `data-i18n*` 标记，JS 通过 `t()` 读取；manifest 的 `name` / `description` 使用 `__MSG_*__`。日期用 `Intl.DateTimeFormat` 按 UI 语言格式化，上午/下午来自文案表。
+多语言：界面文案存放在 `_locales/zh_CN` 与 `_locales/en`，运行时按 `language` 设置 fetch 对应 messages.json，HTML 用 `data-i18n*` 标记、JS 通过 `t()` 读取，因此切换语言后新标签页、popup、选项页与 Service Worker 都同步生效；manifest 的 `name` / `description` 仍用 `__MSG_*__`。语言设置同时决定 Bing 的 `mkt`。日期用 `Intl.DateTimeFormat` 按语言格式化，上午/下午来自文案表。
 
 高清图标需要读取任意最常访问站点的 HTML，`manifest.json` 声明 http/https 主机权限；SVG 不设像素下限，栅格图标至少 40px，低于该尺寸时保留 Chrome favicon。图标按 20px 展示。
 

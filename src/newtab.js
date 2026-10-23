@@ -1,5 +1,5 @@
 import { formatDateLine, formatTime } from "./clock.js";
-import { applyI18n, currentLocale, t } from "./i18n.js";
+import { applyI18n, currentLocale, initI18n, t } from "./i18n.js";
 import { captionFor, getPinned, pickDisplayImage, setPinned } from "./pin.js";
 import { getImage, getLatestImage } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
@@ -13,11 +13,14 @@ const ENGINES = {
   baidu: { labelKey: "engineBaidu", action: "https://www.baidu.com/s", param: "wd" },
 };
 
+let currentEngine = "bing";
+
 function applyEngine(key) {
   const engine = ENGINES[key] ?? ENGINES.bing;
   document.getElementById("search").action = engine.action;
   document.querySelector("#search input").name = engine.param;
   const selected = key in ENGINES ? key : "bing";
+  currentEngine = selected;
   document.getElementById("engine-label").textContent = t(ENGINES[selected].labelKey);
   for (const item of document.querySelectorAll("#engine-menu li")) {
     item.setAttribute("aria-selected", String(item.dataset.engine === selected));
@@ -26,19 +29,24 @@ function applyEngine(key) {
 
 const menu = document.getElementById("engine-menu");
 const toggle = document.getElementById("engine-toggle");
-for (const [key, engine] of Object.entries(ENGINES)) {
-  const item = document.createElement("li");
-  item.textContent = t(engine.labelKey);
-  item.dataset.engine = key;
-  item.role = "option";
-  item.addEventListener("click", () => {
-    applyEngine(key);
-    chrome.storage.local.set({ searchEngine: key });
-    menu.hidden = true;
-    toggle.setAttribute("aria-expanded", "false");
-    document.querySelector("#search input").focus();
-  });
-  menu.append(item);
+
+function buildEngineMenu() {
+  menu.replaceChildren(
+    ...Object.entries(ENGINES).map(([key, engine]) => {
+      const item = document.createElement("li");
+      item.textContent = t(engine.labelKey);
+      item.dataset.engine = key;
+      item.role = "option";
+      item.addEventListener("click", () => {
+        applyEngine(key);
+        chrome.storage.local.set({ searchEngine: key });
+        menu.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+        document.querySelector("#search input").focus();
+      });
+      return item;
+    }),
+  );
 }
 
 toggle.addEventListener("click", () => {
@@ -60,7 +68,12 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+let activeLanguage;
+const initialSettings = await loadSettings();
+await initI18n(initialSettings.language);
+activeLanguage = initialSettings.language;
 applyI18n();
+buildEngineMenu();
 applyEngine((await chrome.storage.local.get("searchEngine")).searchEngine);
 
 async function showTopSites() {
@@ -140,6 +153,16 @@ function applyEffects(settings) {
 async function applySettings() {
   clearTimeout(clockTimer);
   const settings = await loadSettings();
+
+  if (settings.language !== activeLanguage) {
+    activeLanguage = settings.language;
+    await initI18n(settings.language);
+    applyI18n();
+    buildEngineMenu();
+    applyEngine(currentEngine);
+    renderCaption();
+  }
+
   applyEffects(settings);
 
   clock.hidden = !settings.showClock;
@@ -179,6 +202,17 @@ addEventListener("pagehide", () => {
   wallpaperUrl = undefined;
 });
 
+let captionState;
+
+function renderCaption() {
+  if (!captionState) return;
+  document.getElementById("caption").textContent = captionFor(
+    captionState.image,
+    captionState.pinned,
+    t("pinnedPrefix"),
+  );
+}
+
 async function showLatest() {
   const pinnedUrlbase = await getPinned();
   const pinnedImage = pinnedUrlbase ? await getImage(pinnedUrlbase) : null;
@@ -192,7 +226,8 @@ async function showLatest() {
   }
 
   setWallpaper(image.blob);
-  document.getElementById("caption").textContent = captionFor(image, pinned, t("pinnedPrefix"));
+  captionState = { image, pinned };
+  renderCaption();
   document.documentElement.dataset.tone = await resolveTone({
     drk: image.drk,
     blob: image.thumb ?? image.blob,
