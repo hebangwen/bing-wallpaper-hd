@@ -1,7 +1,8 @@
 const DB_NAME = "wallpapers";
 const STORE = "images";
 const FETCHED_AT_INDEX = "fetchedAt";
-const DB_VERSION = 3;
+const DATE_INDEX = "date";
+const DB_VERSION = 4;
 
 export const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -22,6 +23,9 @@ function openDatabase() {
       }
       if (!store.indexNames.contains(FETCHED_AT_INDEX)) {
         store.createIndex(FETCHED_AT_INDEX, "fetchedAt");
+      }
+      if (!store.indexNames.contains(DATE_INDEX)) {
+        store.createIndex(DATE_INDEX, "date");
       }
     };
     request.onsuccess = () => {
@@ -106,20 +110,45 @@ export function getAllImages() {
 
 export function getLatestImage() {
   return transact("readonly", (store) =>
-    requestResult(store.index(FETCHED_AT_INDEX).openCursor(null, "prev")).then(
+    requestResult(store.index(DATE_INDEX).openCursor(null, "prev")).then(
       (cursor) => cursor?.value ?? null,
     ),
   );
 }
 
-export function deleteExpiredImages(now = Date.now()) {
-  const cutoff = now - RETENTION_MS;
+export function deleteImage(urlbase) {
+  return transact("readwrite", (store) => requestResult(store.delete(urlbase)));
+}
+
+export function setFavorite(urlbase, favorite) {
+  return transact("readwrite", async (store) => {
+    const image = await requestResult(store.get(urlbase));
+    if (!image) return null;
+
+    const updated = { ...image, favorite: Boolean(favorite) };
+    await requestResult(store.put(updated));
+    return updated;
+  });
+}
+
+function dateKey(timestamp) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
+}
+
+export function deleteExpiredImages(now = Date.now(), retentionMs = RETENTION_MS) {
+  const cutoff = dateKey(now - retentionMs);
 
   return transact("readwrite", async (store) => {
     let deleted = 0;
 
-    await visitCursor(store.index(FETCHED_AT_INDEX).openCursor(), (cursor) => {
-      if (cursor.value.fetchedAt >= cutoff) return false;
+    await visitCursor(store.index(DATE_INDEX).openCursor(), (cursor) => {
+      const { date, favorite } = cursor.value;
+      if (date >= cutoff) return false;
+      if (favorite) return;
       cursor.delete();
       deleted += 1;
     });
@@ -128,16 +157,32 @@ export function deleteExpiredImages(now = Date.now()) {
   });
 }
 
+// 配额不足时淘汰最旧的非收藏图片；返回 null 表示已无图可删。
 export function deleteOldestImage() {
   return transact("readwrite", async (store) => {
     let image = null;
 
     await visitCursor(store.index(FETCHED_AT_INDEX).openCursor(), (cursor) => {
+      if (cursor.value.favorite) return;
       image = cursor.value;
       cursor.delete();
       return false;
     });
 
     return image;
+  });
+}
+
+export function clearImages({ keepFavorites = false } = {}) {
+  return transact("readwrite", async (store) => {
+    let deleted = 0;
+
+    await visitCursor(store.openCursor(), (cursor) => {
+      if (keepFavorites && cursor.value.favorite) return;
+      cursor.delete();
+      deleted += 1;
+    });
+
+    return deleted;
   });
 }

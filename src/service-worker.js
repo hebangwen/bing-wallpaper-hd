@@ -1,30 +1,56 @@
-import { buildWallpaperUrl, fetchDailyImage } from "./bing.js";
+import { buildWallpaperUrl, fetchArchive } from "./bing.js";
 import { fetchWithRetry } from "./network.js";
-import { deleteExpiredImages, deleteOldestImage, getImage, putImage } from "./store.js";
+import {
+  deleteExpiredImages,
+  deleteOldestImage,
+  getImage,
+  putImage,
+} from "./store.js";
+import {
+  backfillCount,
+  loadSettings,
+  normalizeSettings,
+  nextRunAt,
+  qualityFor,
+  retentionMsFor,
+} from "./settings.js";
+import { makeThumbnail } from "./thumbnail.js";
 
 const ALARM_NAME = "daily-wallpaper";
 const IMAGE_TIMEOUT_MS = 30_000;
+const RETRY_DELAYS_MS = [1_000, 3_000];
+const BADGE_ERROR = "!";
 
 let runPromise;
 
-function nextSixAM() {
-  const date = new Date();
-  date.setHours(6, 0, 0, 0);
-  if (date.getTime() <= Date.now()) {
-    date.setDate(date.getDate() + 1);
-  }
-  return date.getTime();
-}
-
-async function ensureAlarm() {
-  const existing = await chrome.alarms.get(ALARM_NAME);
-  if (!existing) {
-    chrome.alarms.create(ALARM_NAME, { when: nextSixAM(), periodInMinutes: 24 * 60 });
-  }
+async function scheduleAlarm(updateHour) {
+  await chrome.alarms.clear(ALARM_NAME);
+  chrome.alarms.create(ALARM_NAME, {
+    when: nextRunAt(updateHour),
+    periodInMinutes: 24 * 60,
+  });
 }
 
 async function saveStatus(status) {
   await chrome.storage.local.set({ status: { ...status, updatedAt: Date.now() } });
+}
+
+function setBadge(text) {
+  chrome.action.setBadgeText({ text });
+  if (text) {
+    chrome.action.setBadgeBackgroundColor({ color: "#c0392b" });
+  }
+}
+
+async function ensureThumbnail(image) {
+  if (image.thumb || !image.blob) return image;
+
+  const thumb = await makeThumbnail(image.blob);
+  if (!thumb) return image;
+
+  const updated = { ...image, thumb };
+  await putImage(updated);
+  return updated;
 }
 
 async function storeImage(image) {
@@ -46,30 +72,76 @@ async function storeImage(image) {
   }
 }
 
-async function downloadDailyWallpaper() {
-  const image = await fetchDailyImage();
-  await deleteExpiredImages();
+async function downloadOne(entry, size) {
+  const existing = await getImage(entry.urlbase);
+  // 1.1.x 只下载 UHD，没有 size 字段，按 UHD 处理避免升级后重复下载。
+  const storedSize = existing?.size ?? "UHD";
 
-  const existing = await getImage(image.urlbase);
-  if (existing) {
-    await saveStatus({ state: "skipped" });
-  } else {
-    const response = await fetchWithRetry(buildWallpaperUrl(image.urlbase), {
-      timeoutMs: IMAGE_TIMEOUT_MS,
-    });
-    const blob = await response.blob();
-    await storeImage({ ...image, blob, fetchedAt: Date.now() });
-    await saveStatus({ state: "downloaded" });
+  if (existing && storedSize === size) {
+    await ensureThumbnail(existing);
+    return "skipped";
   }
+
+  const response = await fetchWithRetry(buildWallpaperUrl(entry.urlbase, size), {
+    timeoutMs: IMAGE_TIMEOUT_MS,
+    retryDelaysMs: RETRY_DELAYS_MS,
+  });
+  const blob = await response.blob();
+  const thumb = await makeThumbnail(blob);
+
+  await storeImage({
+    ...entry,
+    size,
+    blob,
+    ...(thumb ? { thumb } : {}),
+    ...(existing?.favorite ? { favorite: true } : {}),
+    fetchedAt: Date.now(),
+  });
+
+  return existing ? "updated" : "downloaded";
+}
+
+async function syncWallpapers() {
+  const settings = await loadSettings();
+  await deleteExpiredImages(Date.now(), retentionMsFor(settings.retentionDays));
+
+  const archive = await fetchArchive({
+    n: backfillCount(settings.retentionDays),
+    market: settings.market,
+  });
+  if (archive.length === 0) throw new Error("Bing API returned no image");
+
+  const results = [];
+  for (const [index, entry] of archive.entries()) {
+    const size = qualityFor(settings.quality, index === 0);
+    try {
+      results.push(await downloadOne(entry, size));
+    } catch (error) {
+      results.push("error");
+      console.warn(`wallpaper ${entry.urlbase} failed`, error);
+    }
+  }
+
+  const failed = results.filter((result) => result === "error").length;
+  const succeeded = results.length - failed;
+  if (succeeded === 0) throw new Error("所有壁纸下载失败");
+
+  const changed = results.filter(
+    (result) => result === "downloaded" || result === "updated",
+  ).length;
+
+  await saveStatus({ state: changed > 0 ? "downloaded" : "skipped", changed, failed });
+  setBadge("");
+  return { changed, failed };
 }
 
 async function runSafelyOnce() {
   try {
-    await downloadDailyWallpaper();
-    return { ok: true };
+    return { ok: true, ...(await syncWallpapers()) };
   } catch (error) {
-    const message = String(error);
+    const message = String(error?.message ?? error);
     await saveStatus({ state: "error", message }).catch(() => {});
+    setBadge(BADGE_ERROR);
     return { ok: false, error: message };
   }
 }
@@ -81,25 +153,47 @@ function runSafely() {
   return runPromise;
 }
 
+function rescheduleAndPrune() {
+  return loadSettings().then(async (settings) => {
+    await scheduleAlarm(settings.updateHour);
+    await deleteExpiredImages(Date.now(), retentionMsFor(settings.retentionDays));
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
-  ensureAlarm();
+  rescheduleAndPrune().catch(() => {});
   runSafely();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  ensureAlarm();
+  rescheduleAndPrune().catch(() => {});
   runSafely();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === ALARM_NAME) {
-    runSafely();
-  }
+  if (alarm.name !== ALARM_NAME) return;
+  // 每次触发后重算下一次时间，避免长期运行后的时钟漂移。
+  rescheduleAndPrune().catch(() => {});
+  runSafely();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes.settings) return;
+  const settings = normalizeSettings(changes.settings.newValue);
+  scheduleAlarm(settings.updateHour).catch(() => {});
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "fetch-now") {
     runSafely().then(sendResponse, (error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
+  if (message?.type === "reschedule") {
+    rescheduleAndPrune().then(
+      () => sendResponse({ ok: true }),
+      (error) => sendResponse({ ok: false, error: String(error) }),
+    );
     return true;
   }
 });

@@ -34,6 +34,44 @@ h1 {
   font-size: 12px;
 }
 
+#details[hidden] {
+  display: none;
+}
+
+#actions {
+  display: flex;
+  gap: 6px;
+}
+
+#actions[hidden] {
+  display: none;
+}
+
+#actions button {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: #fff;
+  color: #202124;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#actions button:hover {
+  background: #f1f3f4;
+}
+
+#actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+#favorite[aria-pressed="true"] {
+  border-color: #00818a;
+  color: #00818a;
+}
+
 #details div {
   display: flex;
   gap: 8px;

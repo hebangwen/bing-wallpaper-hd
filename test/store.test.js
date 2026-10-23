@@ -3,32 +3,45 @@ import assert from "node:assert/strict";
 import "fake-indexeddb/auto";
 import {
   RETENTION_MS,
+  clearImages,
   deleteExpiredImages,
   deleteOldestImage,
   getAllImages,
+  getImage,
   getLatestImage,
   putImage,
+  setFavorite,
 } from "../src/store.js";
 
-function image(urlbase, fetchedAt) {
+function dateKey(offsetDays = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
+}
+
+function image(urlbase, fetchedAt, extra = {}) {
   return {
     urlbase,
     title: urlbase,
     copyright: "",
-    date: urlbase,
+    date: dateKey(),
     blob: new Blob([urlbase]),
     fetchedAt,
+    ...extra,
   };
 }
 
-async function clearImages() {
-  while (await deleteOldestImage()) {}
+async function resetImages() {
+  await clearImages();
 }
 
 test("returns the newest image without loading the full stored set", async () => {
-  await clearImages();
-  await putImage(image("old", 1));
-  await putImage(image("new", 2));
+  await resetImages();
+  await putImage({ ...image("old", 1), date: "20261019" });
+  await putImage({ ...image("new", 2), date: "20261020" });
 
   assert.equal((await getLatestImage()).urlbase, "new");
   assert.equal((await deleteOldestImage()).urlbase, "old");
@@ -37,15 +50,25 @@ test("returns the newest image without loading the full stored set", async () =>
     ["new"],
   );
 
-  await clearImages();
+  await resetImages();
+});
+
+test("returns the image with the newest date, not the last downloaded", async () => {
+  await resetImages();
+  await putImage({ ...image("today", 1), date: "20261021" });
+  await putImage({ ...image("yesterday", 2), date: "20261020" });
+
+  assert.equal((await getLatestImage()).urlbase, "today");
+
+  await resetImages();
 });
 
 test("deletes only images past the retention window", async () => {
-  await clearImages();
+  await resetImages();
   const now = Date.now();
-  await putImage(image("expired", now - RETENTION_MS - 1));
-  await putImage(image("boundary", now - RETENTION_MS));
-  await putImage(image("fresh", now - 1));
+  await putImage({ ...image("expired", now), date: dateKey(-8) });
+  await putImage({ ...image("boundary", now), date: dateKey(-7) });
+  await putImage({ ...image("fresh", now), date: dateKey(0) });
 
   assert.equal(await deleteExpiredImages(now), 1);
   assert.deepEqual(
@@ -53,11 +76,85 @@ test("deletes only images past the retention window", async () => {
     ["boundary", "fresh"],
   );
 
-  await clearImages();
+  await resetImages();
+});
+
+test("accepts a shorter retention window", async () => {
+  await resetImages();
+  const now = Date.now();
+  await putImage({ ...image("two-days", now), date: dateKey(-2) });
+  await putImage({ ...image("fresh", now), date: dateKey(0) });
+
+  assert.equal(await deleteExpiredImages(now, 24 * 60 * 60 * 1000), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase),
+    ["fresh"],
+  );
+
+  await resetImages();
+});
+
+test("keeps favorites when pruning expired images", async () => {
+  await resetImages();
+  const now = Date.now();
+  await putImage({ ...image("expired-favorite", now), date: dateKey(-8), favorite: true });
+  await putImage({ ...image("expired", now), date: dateKey(-8) });
+
+  assert.equal(await deleteExpiredImages(now), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase),
+    ["expired-favorite"],
+  );
+
+  await resetImages();
+});
+
+test("skips favorites when evicting the oldest image", async () => {
+  await resetImages();
+  await putImage(image("old-favorite", 1, { favorite: true }));
+  await putImage(image("plain", 2));
+
+  assert.equal((await deleteOldestImage()).urlbase, "plain");
+  assert.equal(await deleteOldestImage(), null);
+  assert.equal((await getAllImages()).length, 1);
+
+  await resetImages();
+});
+
+test("toggles the favorite flag without dropping the bitmap", async () => {
+  await resetImages();
+  await putImage(image("entry", 1));
+
+  const updated = await setFavorite("entry", true);
+  assert.equal(updated.favorite, true);
+  assert.equal(updated.blob.size, 5);
+
+  const stored = await getImage("entry");
+  assert.equal(stored.favorite, true);
+  assert.equal(stored.title, "entry");
+
+  assert.equal(await setFavorite("missing", true), null);
+
+  await resetImages();
+});
+
+test("clears images while keeping favorites on request", async () => {
+  await resetImages();
+  await putImage(image("favorite", 1, { favorite: true }));
+  await putImage(image("plain", 2));
+
+  assert.equal(await clearImages({ keepFavorites: true }), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase),
+    ["favorite"],
+  );
+
+  assert.equal(await clearImages(), 1);
+  assert.equal((await getAllImages()).length, 0);
 });
 
 test("returns null when there is no image to delete", async () => {
-  await clearImages();
+  await resetImages();
   assert.equal(await getLatestImage(), null);
   assert.equal(await deleteOldestImage(), null);
   assert.equal(await deleteExpiredImages(), 0);

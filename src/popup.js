@@ -1,18 +1,18 @@
-import { getAllImages } from "./store.js";
+import { getAllImages, setFavorite } from "./store.js";
 
 const stateText = {
-  downloaded: "已下载今日壁纸",
-  skipped: "今日壁纸已在本地，无需重复下载",
+  downloaded: "壁纸已更新",
+  skipped: "壁纸已是最新",
 };
 
 const objectUrls = new Map();
 let images = [];
-let selectedUrlbase;
+let selected = null;
 
 function objectUrlFor(image) {
   let url = objectUrls.get(image.urlbase);
   if (!url) {
-    url = URL.createObjectURL(image.blob);
+    url = URL.createObjectURL(image.thumb ?? image.blob);
     objectUrls.set(image.urlbase, url);
   }
   return url;
@@ -22,16 +22,36 @@ function newestFirst(a, b) {
   return (b.date ?? "").localeCompare(a.date ?? "") || b.fetchedAt - a.fetchedAt;
 }
 
+function downloadName(image) {
+  const ext = image.blob?.type === "image/png" ? "png" : "jpg";
+  const title = (image.title || "wallpaper")
+    .replace(/[\\/:*?"<>|\s]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `bing-${image.date || "unknown"}-${title}.${ext}`;
+}
+
+function renderFavorite(image) {
+  const button = document.getElementById("favorite");
+  const favorite = Boolean(image?.favorite);
+  button.setAttribute("aria-pressed", String(favorite));
+  button.textContent = favorite ? "★ 已收藏" : "☆ 收藏";
+  button.title = favorite ? "取消收藏" : "收藏后不会被自动清理";
+}
+
 function renderImage(image) {
   const thumbnail = document.getElementById("thumbnail");
   thumbnail.src = objectUrlFor(image);
   thumbnail.hidden = false;
   document.getElementById("title").textContent = image.title || "Bing Wallpaper HD";
   document.getElementById("copyright").textContent = image.copyright ?? "";
+  document.getElementById("actions").hidden = false;
+  renderFavorite(image);
 }
 
 function renderEmpty() {
   document.getElementById("thumbnail").hidden = true;
+  document.getElementById("actions").hidden = true;
   document.getElementById("history").replaceChildren();
   document.getElementById("title").textContent = "Bing Wallpaper HD";
   document.getElementById("copyright").textContent = "";
@@ -44,12 +64,12 @@ function updateSelection(image) {
 }
 
 function selectImage(image) {
-  selectedUrlbase = image.urlbase;
+  selected = image;
   renderImage(image);
   updateSelection(image);
 }
 
-function renderHistory(selected) {
+function renderHistory(current) {
   const container = document.getElementById("history");
   container.replaceChildren(
     ...images.map((image) => {
@@ -58,7 +78,7 @@ function renderHistory(selected) {
       button.className = "history-item";
       button.dataset.urlbase = image.urlbase;
       button.title = [image.date, image.title].filter(Boolean).join(" ");
-      button.setAttribute("aria-current", String(image.urlbase === selected.urlbase));
+      button.setAttribute("aria-current", String(image.urlbase === current.urlbase));
       button.addEventListener("click", () => selectImage(image));
 
       const thumbnail = document.createElement("img");
@@ -80,6 +100,8 @@ function renderStatus(status, hasImage) {
 
   if (status.state === "error") {
     message.textContent = `获取失败：${status.message ?? "未知错误"}${hasImage ? "，当前显示最近一次壁纸" : ""}`;
+  } else if (status.state === "downloaded" && status.changed > 1) {
+    message.textContent = `${stateText.downloaded}（${status.changed} 张）`;
   } else {
     message.textContent = stateText[status.state] ?? "";
   }
@@ -98,8 +120,7 @@ async function refresh() {
 
   images = [...allImages].sort(newestFirst);
   const latest = images[0] ?? null;
-  const selected = images.find((image) => image.urlbase === selectedUrlbase) ?? latest;
-  selectedUrlbase = selected?.urlbase;
+  selected = images.find((image) => image.urlbase === selected?.urlbase) ?? latest;
 
   renderStatus(status, Boolean(latest));
   if (!selected) {
@@ -118,6 +139,39 @@ addEventListener("pagehide", () => {
 
 await refresh();
 
+document.getElementById("favorite").addEventListener("click", async (event) => {
+  if (!selected) return;
+
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const updated = await setFavorite(selected.urlbase, !selected.favorite);
+    if (updated) {
+      selected.favorite = updated.favorite;
+      const stored = images.find((image) => image.urlbase === updated.urlbase);
+      if (stored) stored.favorite = updated.favorite;
+      renderFavorite(selected);
+    }
+  } catch (error) {
+    document.getElementById("message").textContent = `收藏失败：${error}`;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("save").addEventListener("click", () => {
+  if (!selected?.blob) return;
+
+  const url = URL.createObjectURL(selected.blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = downloadName(selected);
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+
+  document.getElementById("message").textContent = "已开始下载原图";
+});
+
 document.getElementById("fetch").addEventListener("click", async (event) => {
   const button = event.currentTarget;
   button.disabled = true;
@@ -132,7 +186,7 @@ document.getElementById("fetch").addEventListener("click", async (event) => {
     error = String(sendError);
   }
 
-  if (fetched) selectedUrlbase = undefined;
+  if (fetched) selected = null;
 
   try {
     await refresh();

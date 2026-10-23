@@ -1,5 +1,6 @@
 import { getLatestImage } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
+import { resolveTone } from "./tone.js";
 import { topSitesFrom } from "./top-sites.js";
 
 const ENGINES = {
@@ -123,6 +124,10 @@ async function showLatest() {
   document.getElementById("caption").textContent = [latest.title, latest.copyright]
     .filter(Boolean)
     .join(" · ");
+  document.documentElement.dataset.tone = await resolveTone({
+    drk: latest.drk,
+    blob: latest.thumb ?? latest.blob,
+  });
   return true;
 }
 

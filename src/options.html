@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="options.css" />
+  <title>Bing Wallpaper HD 设置</title>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Bing Wallpaper HD</h1>
+      <p class="lead">新标签页壁纸与缓存设置，修改后立即生效。</p>
+    </header>
+
+    <section>
+      <h2>壁纸</h2>
+
+      <label class="field">
+        <span>画质</span>
+        <select id="quality"></select>
+        <small>UHD 约 3.6 MB/张；历史图固定用 1080p，控制总体积。</small>
+      </label>
+
+      <label class="field">
+        <span>地区</span>
+        <select id="market"></select>
+        <small>影响标题与版权文案的语言，图片通常相同。</small>
+      </label>
+
+      <label class="field">
+        <span>保留天数</span>
+        <select id="retention"></select>
+        <small>按壁纸日期计算；超出且未收藏的图片会被自动清理。</small>
+      </label>
+
+      <label class="field">
+        <span>每日更新</span>
+        <select id="hour"></select>
+        <small>到点、浏览器启动或扩展更新时会自动拉取。</small>
+      </label>
+    </section>
+
+    <section>
+      <h2>缓存</h2>
+      <dl class="stats">
+        <div><dt>图片</dt><dd id="count">-</dd></div>
+        <div><dt>占用</dt><dd id="usage">-</dd></div>
+        <div><dt>收藏</dt><dd id="favorites">-</dd></div>
+      </dl>
+      <div class="buttons">
+        <button id="clear-unpinned" type="button">清除未收藏</button>
+        <button id="clear-all" type="button" class="danger">清除全部</button>
+      </div>
+      <small>清除后打开新标签页会自动重新获取；收藏的图片不受保留期限制。</small>
+    </section>
+
+    <p id="message" role="status"></p>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
