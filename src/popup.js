@@ -68,10 +68,19 @@ function renderEmpty() {
   document.getElementById("copyright").textContent = "";
 }
 
+function scrollActiveIntoView() {
+  const container = document.getElementById("history");
+  container.querySelector('[aria-current="true"]')?.scrollIntoView({
+    block: "nearest",
+    inline: "center",
+  });
+}
+
 function updateSelection(image) {
   for (const button of document.querySelectorAll("#history .history-item")) {
     button.setAttribute("aria-current", String(button.dataset.urlbase === image.urlbase));
   }
+  scrollActiveIntoView();
 }
 
 function selectImage(image) {
@@ -99,6 +108,8 @@ function renderHistory(current) {
       return button;
     }),
   );
+
+  scrollActiveIntoView();
 }
 
 function renderStatus(status, hasImage) {
@@ -154,6 +165,23 @@ addEventListener("pagehide", () => {
 });
 
 await refresh();
+
+const historyStrip = document.getElementById("history");
+
+// 鼠标滚轮竖向滚动时横向移动缩略图条；触控板的横向滑动交给浏览器。
+historyStrip.addEventListener(
+  "wheel",
+  (event) => {
+    if (event.deltaX !== 0) return;
+    if (historyStrip.scrollWidth <= historyStrip.clientWidth) return;
+
+    event.preventDefault();
+    const scale =
+      event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? historyStrip.clientWidth : 1;
+    historyStrip.scrollLeft += event.deltaY * scale;
+  },
+  { passive: false },
+);
 
 document.getElementById("favorite").addEventListener("click", async (event) => {
   if (!selected) return;

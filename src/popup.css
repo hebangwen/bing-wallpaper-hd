@@ -111,6 +111,7 @@ h1 {
   display: flex;
   gap: 4px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .history-item {
@@ -125,6 +126,8 @@ h1 {
 
 .history-item img {
   height: 44px;
+  width: 78px;
+  object-fit: cover;
   border-radius: 4px;
   display: block;
 }
