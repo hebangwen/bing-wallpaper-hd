@@ -3,91 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="options.css" />
-  <title>Bing Wallpaper HD 设置</title>
+  <title data-i18n="optionsTitle"></title>
 </head>
 <body>
   <main>
     <header>
-      <h1>Bing Wallpaper HD</h1>
-      <p class="lead">新标签页壁纸与缓存设置，修改后立即生效。</p>
+      <h1 data-i18n="extName"></h1>
+      <p class="lead" data-i18n="optionsLead"></p>
     </header>
 
     <section>
-      <h2>壁纸</h2>
+      <h2 data-i18n="sectionWallpaper"></h2>
 
       <div class="field">
-        <span>画质</span>
+        <span data-i18n="labelSource"></span>
+        <select id="source"></select>
+        <small data-i18n="sourceHint"></small>
+      </div>
+
+      <div class="field">
+        <span data-i18n="labelQuality"></span>
         <select id="quality"></select>
-        <small>UHD 为 Bing 原生 4K；自定义尺寸由服务端缩放，范围 320×240 ~ 7680×4320。</small>
+        <small data-i18n="qualityHint"></small>
       </div>
 
       <div class="field" id="custom-quality" hidden>
-        <span>自定义</span>
+        <span data-i18n="labelCustom"></span>
         <div class="inline">
-          <input id="custom-width" type="number" min="320" max="7680" step="1" aria-label="宽度" />
+          <input id="custom-width" type="number" min="320" max="7680" step="1" aria-label="width" />
           <span>×</span>
-          <input id="custom-height" type="number" min="240" max="4320" step="1" aria-label="高度" />
-          <button id="apply-quality" type="button">应用</button>
+          <input id="custom-height" type="number" min="240" max="4320" step="1" aria-label="height" />
+          <button id="apply-quality" type="button" data-i18n="applyQuality"></button>
         </div>
       </div>
 
       <label class="field">
-        <span>地区</span>
+        <span data-i18n="labelMarket"></span>
         <select id="market"></select>
-        <small>影响标题与版权文案的语言，图片通常相同。</small>
+        <small data-i18n="marketHint"></small>
       </label>
 
       <label class="field">
-        <span>保留天数</span>
+        <span data-i18n="labelRetention"></span>
         <select id="retention"></select>
-        <small>按壁纸日期计算；超出且未收藏的图片会被自动清理。</small>
+        <small data-i18n="retentionHint"></small>
       </label>
 
       <label class="field">
-        <span>每日更新</span>
+        <span data-i18n="labelUpdateHour"></span>
         <select id="hour"></select>
-        <small>到点、浏览器启动或扩展更新时会自动拉取。</small>
+        <small data-i18n="updateHourHint"></small>
       </label>
     </section>
 
     <section>
-      <h2>日期与时间</h2>
+      <h2 data-i18n="sectionClock"></h2>
 
       <label class="field checkbox">
         <input id="show-clock" type="checkbox" />
-        <span>在新标签页显示时钟</span>
+        <span data-i18n="labelShowClock"></span>
       </label>
 
       <label class="field checkbox">
         <input id="show-seconds" type="checkbox" />
-        <span>时间精确到秒</span>
+        <span data-i18n="labelShowSeconds"></span>
       </label>
 
       <label class="field checkbox">
         <input id="hour24" type="checkbox" />
-        <span>24 小时制</span>
+        <span data-i18n="labelHour24"></span>
       </label>
 
       <label class="field">
-        <span>日期格式</span>
+        <span data-i18n="labelDateStyle"></span>
         <select id="date-style"></select>
       </label>
 
-      <small>时钟每秒刷新，只在本机渲染，不产生网络请求。</small>
+      <small data-i18n="clockHint"></small>
     </section>
 
     <section>
-      <h2>缓存</h2>
+      <h2 data-i18n="sectionEffects"></h2>
+
+      <div class="field">
+        <span data-i18n="labelBlur"></span>
+        <div class="range">
+          <input id="blur" type="range" min="0" max="40" step="1" />
+          <output id="blur-value">0 px</output>
+        </div>
+      </div>
+
+      <div class="field">
+        <span data-i18n="labelDim"></span>
+        <div class="range">
+          <input id="dim" type="range" min="0" max="70" step="1" />
+          <output id="dim-value">0%</output>
+        </div>
+      </div>
+
+      <label class="field checkbox">
+        <input id="glass" type="checkbox" />
+        <span data-i18n="labelGlass"></span>
+      </label>
+
+      <div class="preview" id="preview" data-glass="off">
+        <div class="preview-image" id="preview-image"></div>
+        <div class="preview-dim"></div>
+        <div class="preview-glass">20:46</div>
+      </div>
+
+      <small data-i18n="effectsHint"></small>
+    </section>
+
+    <section>
+      <h2 data-i18n="sectionCache"></h2>
       <dl class="stats">
-        <div><dt>图片</dt><dd id="count">-</dd></div>
-        <div><dt>占用</dt><dd id="usage">-</dd></div>
-        <div><dt>收藏</dt><dd id="favorites">-</dd></div>
+        <div><dt data-i18n="statImages"></dt><dd id="count">-</dd></div>
+        <div><dt data-i18n="statUsage"></dt><dd id="usage">-</dd></div>
+        <div><dt data-i18n="statFavorites"></dt><dd id="favorites">-</dd></div>
       </dl>
       <div class="buttons">
-        <button id="clear-unpinned" type="button">清除未收藏</button>
-        <button id="clear-all" type="button" class="danger">清除全部</button>
+        <button id="clear-unpinned" type="button" data-i18n="clearUnpinned"></button>
+        <button id="clear-all" type="button" class="danger" data-i18n="clearAll"></button>
       </div>
-      <small>清除后打开新标签页会自动重新获取；收藏的图片不受保留期限制。</small>
+      <small data-i18n="clearHint"></small>
     </section>
 
     <p id="message" role="status"></p>

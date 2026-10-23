@@ -1,10 +1,11 @@
-const WEEKDAYS = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-
 function pad(value) {
   return String(value).padStart(2, "0");
 }
 
-export function formatTime(date, { hour24 = true, showSeconds = true } = {}) {
+export function formatTime(
+  date,
+  { hour24 = true, showSeconds = true, am = "AM", pm = "PM" } = {},
+) {
   const minutes = showSeconds
     ? `${pad(date.getMinutes())}:${pad(date.getSeconds())}`
     : pad(date.getMinutes());
@@ -14,11 +15,10 @@ export function formatTime(date, { hour24 = true, showSeconds = true } = {}) {
   }
 
   const hours = date.getHours();
-  const period = hours < 12 ? "上午" : "下午";
-  return `${period} ${hours % 12 || 12}:${minutes}`;
+  return `${hours < 12 ? am : pm} ${hours % 12 || 12}:${minutes}`;
 }
 
-export function formatDateLine(date, style = "long") {
+export function formatDateLine(date, style = "long", locale = "zh-CN") {
   if (style === "hidden") return "";
 
   const year = date.getFullYear();
@@ -29,5 +29,10 @@ export function formatDateLine(date, style = "long") {
     return `${year}-${pad(month)}-${pad(day)}`;
   }
 
-  return `${year}年${month}月${day}日 ${WEEKDAYS[date.getDay()]}`;
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(date);
 }

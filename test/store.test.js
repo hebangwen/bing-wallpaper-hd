@@ -5,6 +5,7 @@ import {
   RETENTION_MS,
   clearImages,
   deleteExpiredImages,
+  deleteImagesExceptSource,
   deleteOldestImage,
   getAllImages,
   getImage,
@@ -151,6 +152,21 @@ test("clears images while keeping favorites on request", async () => {
 
   assert.equal(await clearImages(), 1);
   assert.equal((await getAllImages()).length, 0);
+});
+
+test("drops images from other sources but keeps favorites", async () => {
+  await resetImages();
+  await putImage({ ...image("bing-1", 1), source: "bing" });
+  await putImage({ ...image("wiki-1", 2), source: "wikimedia-en" });
+  await putImage({ ...image("wiki-fav", 3), source: "wikimedia-en", favorite: true });
+
+  assert.equal(await deleteImagesExceptSource("wikimedia-en"), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase).sort(),
+    ["wiki-1", "wiki-fav"],
+  );
+
+  await resetImages();
 });
 
 test("returns null when there is no image to delete", async () => {

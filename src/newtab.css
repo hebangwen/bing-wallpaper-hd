@@ -10,6 +10,26 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 0;
+  filter: blur(var(--wallpaper-blur, 0px));
+  transform: scale(var(--wallpaper-scale, 1));
+}
+
+/* 暗化遮罩位于壁纸与内容之间 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, var(--wallpaper-dim, 0));
+  pointer-events: none;
+}
+
+#clock,
+#search,
+#top-sites,
+#caption {
+  z-index: 2;
 }
 
 #clock {
@@ -242,4 +262,30 @@ body {
   #clock-date {
     font-size: 13px;
   }
+}
+
+/* 毛玻璃面板：搜索框与时钟 */
+:root[data-glass="on"] #search {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(1.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root[data-glass="on"] #search:focus-within {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+:root[data-glass="on"] #clock {
+  padding: 16px 30px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-glass="on"][data-tone="light"] #clock {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.6);
 }

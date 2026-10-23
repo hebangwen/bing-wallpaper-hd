@@ -1,4 +1,5 @@
 import { formatDateLine, formatTime } from "./clock.js";
+import { applyI18n, currentLocale, t } from "./i18n.js";
 import { captionFor, getPinned, pickDisplayImage, setPinned } from "./pin.js";
 import { getImage, getLatestImage } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
@@ -7,9 +8,9 @@ import { resolveTone } from "./tone.js";
 import { topSitesFrom } from "./top-sites.js";
 
 const ENGINES = {
-  bing: { label: "Bing", action: "https://www.bing.com/search", param: "q" },
-  google: { label: "Google", action: "https://www.google.com/search", param: "q" },
-  baidu: { label: "百度", action: "https://www.baidu.com/s", param: "wd" },
+  bing: { labelKey: "engineBing", action: "https://www.bing.com/search", param: "q" },
+  google: { labelKey: "engineGoogle", action: "https://www.google.com/search", param: "q" },
+  baidu: { labelKey: "engineBaidu", action: "https://www.baidu.com/s", param: "wd" },
 };
 
 function applyEngine(key) {
@@ -17,7 +18,7 @@ function applyEngine(key) {
   document.getElementById("search").action = engine.action;
   document.querySelector("#search input").name = engine.param;
   const selected = key in ENGINES ? key : "bing";
-  document.getElementById("engine-label").textContent = ENGINES[selected].label;
+  document.getElementById("engine-label").textContent = t(ENGINES[selected].labelKey);
   for (const item of document.querySelectorAll("#engine-menu li")) {
     item.setAttribute("aria-selected", String(item.dataset.engine === selected));
   }
@@ -27,7 +28,7 @@ const menu = document.getElementById("engine-menu");
 const toggle = document.getElementById("engine-toggle");
 for (const [key, engine] of Object.entries(ENGINES)) {
   const item = document.createElement("li");
-  item.textContent = engine.label;
+  item.textContent = t(engine.labelKey);
   item.dataset.engine = key;
   item.role = "option";
   item.addEventListener("click", () => {
@@ -59,6 +60,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+applyI18n();
 applyEngine((await chrome.storage.local.get("searchEngine")).searchEngine);
 
 async function showTopSites() {
@@ -114,17 +116,31 @@ let clockTimer;
 
 function renderClock(settings) {
   const now = new Date();
-  clockTime.textContent = formatTime(now, settings);
+  clockTime.textContent = formatTime(now, {
+    hour24: settings.hour24,
+    showSeconds: settings.showSeconds,
+    am: t("periodAm"),
+    pm: t("periodPm"),
+  });
   clockTime.dateTime = now.toISOString();
 
-  const line = formatDateLine(now, settings.dateStyle);
+  const line = formatDateLine(now, settings.dateStyle, currentLocale());
   clockDate.textContent = line;
   clockDate.hidden = !line;
 }
 
-async function setupClock() {
+function applyEffects(settings) {
+  const root = document.documentElement;
+  root.style.setProperty("--wallpaper-blur", `${settings.wallpaperBlur}px`);
+  root.style.setProperty("--wallpaper-dim", String(settings.wallpaperDim / 100));
+  root.style.setProperty("--wallpaper-scale", String(1 + settings.wallpaperBlur / 150));
+  root.dataset.glass = settings.glassEffect ? "on" : "off";
+}
+
+async function applySettings() {
   clearTimeout(clockTimer);
   const settings = await loadSettings();
+  applyEffects(settings);
 
   clock.hidden = !settings.showClock;
   if (!settings.showClock) return;
@@ -138,11 +154,11 @@ async function setupClock() {
   clockTimer = setTimeout(tick, 1000 - (Date.now() % 1000) + 10);
 }
 
-setupClock();
+applySettings();
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
-  if (changes.settings) setupClock();
+  if (changes.settings) applySettings();
   if (changes.pinnedUrlbase) {
     showLatest().catch(() => {});
   }
@@ -176,7 +192,7 @@ async function showLatest() {
   }
 
   setWallpaper(image.blob);
-  document.getElementById("caption").textContent = captionFor(image, pinned);
+  document.getElementById("caption").textContent = captionFor(image, pinned, t("pinnedPrefix"));
   document.documentElement.dataset.tone = await resolveTone({
     drk: image.drk,
     blob: image.thumb ?? image.blob,
@@ -192,9 +208,9 @@ try {
     } catch {}
 
     if (!fetched || !(await showLatest())) {
-      document.getElementById("caption").textContent = "壁纸获取失败，请稍后重试";
+      document.getElementById("caption").textContent = t("wallpaperFetchFailed");
     }
   }
 } catch {
-  document.getElementById("caption").textContent = "壁纸读取失败，请刷新重试";
+  document.getElementById("caption").textContent = t("wallpaperReadFailed");
 }

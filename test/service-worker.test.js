@@ -44,6 +44,10 @@ globalThis.chrome = {
     onStartup: { addListener: (fn) => (handlers.startup = fn) },
     onMessage: { addListener: (fn) => (handlers.message = fn) },
   },
+  i18n: {
+    getMessage: (key) => key,
+    getUILanguage: () => "zh-CN",
+  },
   action: {
     setBadgeText: ({ text }) => {
       badge = text;
@@ -127,7 +131,7 @@ test("reports a badge when the archive is empty", async () => {
     const response = await fetchNow();
     assert.equal(response.ok, false);
     assert.equal(badge, "!");
-    assert.match(storageData.status.message, /no image/);
+    assert.match(storageData.status.message, /noWallpaper/);
   } finally {
     globalThis.fetch = originalFetch;
   }

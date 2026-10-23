@@ -124,6 +124,69 @@ section {
   padding: 7px 12px;
 }
 
+.range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range input[type="range"] {
+  width: 200px;
+  accent-color: var(--accent);
+}
+
+.range output {
+  min-width: 48px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview {
+  position: relative;
+  height: 128px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #10151a;
+}
+
+.preview-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(var(--preview-blur, 0));
+  transform: scale(var(--preview-scale, 1));
+}
+
+.preview-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--preview-dim, 0));
+}
+
+.preview-glass {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 18px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.preview[data-glass="on"] .preview-glass {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  text-shadow: none;
+}
+
 select {
   justify-self: start;
   min-width: 200px;

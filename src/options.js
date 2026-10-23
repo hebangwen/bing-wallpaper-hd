@@ -1,13 +1,20 @@
+import { applyI18n, t } from "./i18n.js";
 import {
   DATE_STYLES,
   MARKETS,
   PRESET_QUALITIES,
+  SOURCE_IDS,
   loadSettings,
   normalizeSettings,
   parseQuality,
   saveSettings,
 } from "./settings.js";
-import { clearImages, getAllImages } from "./store.js";
+import { SOURCE_LABEL_KEYS } from "./sources/index.js";
+import {
+  clearImages,
+  deleteImagesExceptSource,
+  getAllImages,
+} from "./store.js";
 
 const QUALITY_LABELS = {
   UHD: "UHD 3840×2160",
@@ -25,14 +32,15 @@ const MARKET_LABELS = {
   "fr-FR": "Français",
 };
 
-const DATE_STYLE_LABELS = {
-  long: "完整（2026年10月23日 星期五）",
-  numeric: "数字（2026-10-23）",
-  hidden: "不显示日期",
+const DATE_STYLE_KEYS = {
+  long: "dateStyleLong",
+  numeric: "dateStyleNumeric",
+  hidden: "dateStyleHidden",
 };
 
 const RETENTION_OPTIONS = [3, 7, 14, 30];
 
+const source = document.getElementById("source");
 const quality = document.getElementById("quality");
 const customRow = document.getElementById("custom-quality");
 const customWidth = document.getElementById("custom-width");
@@ -44,9 +52,13 @@ const showClock = document.getElementById("show-clock");
 const showSeconds = document.getElementById("show-seconds");
 const hour24 = document.getElementById("hour24");
 const dateStyle = document.getElementById("date-style");
+const blur = document.getElementById("blur");
+const dim = document.getElementById("dim");
+const glass = document.getElementById("glass");
 const message = document.getElementById("message");
 
 let settings = normalizeSettings(null);
+let previewUrl;
 
 function fillSelect(select, entries, selected) {
   const pairs = entries.map(([value, label]) => [String(value), label]);
@@ -65,13 +77,30 @@ function fillSelect(select, entries, selected) {
   select.value = String(selected);
 }
 
+function applyPreview(current) {
+  const preview = document.getElementById("preview");
+  preview.style.setProperty("--preview-blur", `${current.wallpaperBlur}px`);
+  preview.style.setProperty("--preview-scale", String(1 + current.wallpaperBlur / 150));
+  preview.style.setProperty("--preview-dim", String(current.wallpaperDim / 100));
+  preview.dataset.glass = current.glassEffect ? "on" : "off";
+
+  document.getElementById("blur-value").textContent = `${current.wallpaperBlur} px`;
+  document.getElementById("dim-value").textContent = `${current.wallpaperDim}%`;
+}
+
 function applyToControls() {
+  fillSelect(
+    source,
+    SOURCE_IDS.map((id) => [id, t(SOURCE_LABEL_KEYS[id] ?? id)]),
+    settings.source,
+  );
+
   const preset = PRESET_QUALITIES.includes(settings.quality) ? settings.quality : "custom";
   fillSelect(
     quality,
     [
       ...PRESET_QUALITIES.map((value) => [value, QUALITY_LABELS[value] ?? value]),
-      ["custom", "自定义…"],
+      ["custom", t("customOption")],
     ],
     preset,
   );
@@ -89,7 +118,7 @@ function applyToControls() {
   );
   fillSelect(
     retention,
-    RETENTION_OPTIONS.map((days) => [days, `${days} 天`]),
+    RETENTION_OPTIONS.map((days) => [days, t("retentionOption", [days])]),
     settings.retentionDays,
   );
   fillSelect(
@@ -102,7 +131,7 @@ function applyToControls() {
   );
   fillSelect(
     dateStyle,
-    DATE_STYLES.map((value) => [value, DATE_STYLE_LABELS[value] ?? value]),
+    DATE_STYLES.map((value) => [value, t(DATE_STYLE_KEYS[value])]),
     settings.dateStyle,
   );
 
@@ -113,6 +142,11 @@ function applyToControls() {
   for (const control of [showSeconds, hour24, dateStyle]) {
     control.disabled = !settings.showClock;
   }
+
+  blur.value = String(settings.wallpaperBlur);
+  dim.value = String(settings.wallpaperDim);
+  glass.checked = settings.glassEffect;
+  applyPreview(settings);
 }
 
 function formatBytes(bytes) {
@@ -153,33 +187,70 @@ async function refreshStats() {
   );
 }
 
-async function update(patch) {
+async function loadPreviewImage() {
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+    previewUrl = undefined;
+  }
+  document.getElementById("preview-image").style.backgroundImage = "";
+
+  const images = await getAllImages();
+  const latest = [...images].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))[0];
+  const blob = latest?.thumb ?? latest?.blob;
+  if (!blob) return;
+
+  previewUrl = URL.createObjectURL(blob);
+  document.getElementById("preview-image").style.backgroundImage = `url("${previewUrl}")`;
+}
+
+let saveChain = Promise.resolve();
+
+// 连续修改（例如两个滑块）串行落盘，避免旧快照覆盖新值。
+function update(patch) {
   settings = normalizeSettings({ ...settings, ...patch });
-  await saveSettings(settings);
-  applyToControls();
-  await chrome.runtime.sendMessage({ type: "reschedule" }).catch(() => {});
-  flash("已保存");
-  await refreshStats();
+  const snapshot = settings;
+
+  saveChain = saveChain
+    .then(async () => {
+      await saveSettings(snapshot);
+      applyToControls();
+      await chrome.runtime.sendMessage({ type: "reschedule" }).catch(() => {});
+      flash(t("saved"));
+      await refreshStats();
+    })
+    .catch((error) => {
+      flash(String(error));
+    });
+
+  return saveChain;
 }
 
 async function clear(keepFavorites) {
-  if (!keepFavorites && !confirm("清除全部壁纸？收藏的图片也会删除。")) return;
+  if (!keepFavorites && !confirm(t("confirmClearAll"))) return;
 
   const buttons = document.querySelectorAll(".buttons button");
   for (const button of buttons) button.disabled = true;
 
   try {
     const deleted = await clearImages({ keepFavorites });
-    flash(deleted > 0 ? `已清除 ${deleted} 张` : "没有可清除的图片");
+    flash(deleted > 0 ? t("clearedCount", [deleted]) : t("nothingToClear"));
     await refreshStats();
   } finally {
     for (const button of buttons) button.disabled = false;
   }
 }
 
+applyI18n();
 settings = await loadSettings();
 applyToControls();
-await refreshStats();
+await Promise.all([refreshStats(), loadPreviewImage()]);
+
+source.addEventListener("change", async () => {
+  await update({ source: source.value });
+  await deleteImagesExceptSource(source.value);
+  await refreshStats();
+  await loadPreviewImage();
+});
 
 quality.addEventListener("change", () => {
   if (quality.value === "custom") {
@@ -196,7 +267,7 @@ quality.addEventListener("change", () => {
 document.getElementById("apply-quality").addEventListener("click", () => {
   const size = parseQuality(`${Number(customWidth.value)}x${Number(customHeight.value)}`);
   if (!size) {
-    flash("宽高需在 320×240 到 7680×4320 之间");
+    flash(t("invalidSize"));
     return;
   }
 
@@ -211,9 +282,27 @@ showSeconds.addEventListener("change", () => update({ showSeconds: showSeconds.c
 hour24.addEventListener("change", () => update({ hour24: hour24.checked }));
 dateStyle.addEventListener("change", () => update({ dateStyle: dateStyle.value }));
 
+blur.addEventListener("input", () => {
+  settings = normalizeSettings({ ...settings, wallpaperBlur: Number(blur.value) });
+  applyPreview(settings);
+});
+blur.addEventListener("change", () => update({ wallpaperBlur: Number(blur.value) }));
+
+dim.addEventListener("input", () => {
+  settings = normalizeSettings({ ...settings, wallpaperDim: Number(dim.value) });
+  applyPreview(settings);
+});
+dim.addEventListener("change", () => update({ wallpaperDim: Number(dim.value) }));
+
+glass.addEventListener("change", () => update({ glassEffect: glass.checked }));
+
 document
   .getElementById("clear-unpinned")
   .addEventListener("click", () => clear(true));
 document
   .getElementById("clear-all")
   .addEventListener("click", () => clear(false));
+
+addEventListener("pagehide", () => {
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+});

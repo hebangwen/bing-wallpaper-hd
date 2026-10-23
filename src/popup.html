@@ -6,20 +6,20 @@
 </head>
 <body>
   <main>
-    <img id="thumbnail" alt="今日 Bing 壁纸" hidden />
+    <img id="thumbnail" alt="Bing Wallpaper HD" hidden />
     <h1 id="title">Bing Wallpaper HD</h1>
     <p id="copyright" class="muted"></p>
     <div id="actions" hidden>
-      <button id="favorite" type="button" aria-pressed="false">☆ 收藏</button>
-      <button id="pin" type="button" aria-pressed="false">📌 固定</button>
-      <button id="save" type="button">保存原图</button>
+      <button id="favorite" type="button" aria-pressed="false"></button>
+      <button id="pin" type="button" aria-pressed="false"></button>
+      <button id="save" type="button" data-i18n="saveOriginal"></button>
     </div>
     <dl id="details" hidden>
-      <div><dt>更新时间</dt><dd id="updated"></dd></div>
+      <div><dt data-i18n="updatedLabel"></dt><dd id="updated"></dd></div>
     </dl>
     <p id="message" class="muted"></p>
     <div id="history"></div>
-    <button id="fetch" type="button">立即获取</button>
+    <button id="fetch" type="button" data-i18n="fetchNow"></button>
   </main>
   <script type="module" src="popup.js"></script>
 </body>

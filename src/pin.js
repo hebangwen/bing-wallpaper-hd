@@ -19,8 +19,8 @@ export function pickDisplayImage({ pinnedUrlbase, pinnedImage, latest }) {
   return { image: latest ?? null, pinned: false };
 }
 
-export function captionFor(image, pinned) {
+export function captionFor(image, pinned, prefix = "已固定") {
   const text = [image.title, image.copyright].filter(Boolean).join(" · ");
   if (!pinned) return text;
-  return text ? `已固定 · ${text}` : "已固定";
+  return text ? `${prefix} · ${text}` : prefix;
 }

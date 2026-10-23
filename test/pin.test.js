@@ -38,5 +38,6 @@ test("marks the caption when a wallpaper is pinned", () => {
     "已固定 · A · B",
   );
   assert.equal(captionFor({ title: "", copyright: "" }, true), "已固定");
+  assert.equal(captionFor({ title: "A", copyright: "" }, true, "Pinned"), "Pinned · A");
   assert.equal(captionFor({ title: "", copyright: "" }, false), "");
 });

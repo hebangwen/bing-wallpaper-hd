@@ -1,5 +1,6 @@
-import { buildWallpaperUrl, fetchArchive } from "./bing.js";
+import { t } from "./i18n.js";
 import { fetchWithRetry } from "./network.js";
+import { getSource } from "./sources/index.js";
 import {
   deleteExpiredImages,
   deleteOldestImage,
@@ -72,7 +73,7 @@ async function storeImage(image) {
   }
 }
 
-async function downloadOne(entry, size) {
+async function downloadOne(entry, size, source) {
   const existing = await getImage(entry.urlbase);
   // 1.1.x 只下载 UHD，没有 size 字段，按 UHD 处理避免升级后重复下载。
   const storedSize = existing?.size ?? "UHD";
@@ -82,7 +83,7 @@ async function downloadOne(entry, size) {
     return "skipped";
   }
 
-  const response = await fetchWithRetry(buildWallpaperUrl(entry.urlbase, size), {
+  const response = await fetchWithRetry(source.imageUrl(entry, size), {
     timeoutMs: IMAGE_TIMEOUT_MS,
     retryDelaysMs: RETRY_DELAYS_MS,
   });
@@ -91,6 +92,7 @@ async function downloadOne(entry, size) {
 
   await storeImage({
     ...entry,
+    source: entry.source ?? source.id,
     size,
     blob,
     ...(thumb ? { thumb } : {}),
@@ -105,17 +107,19 @@ async function syncWallpapers() {
   const settings = await loadSettings();
   await deleteExpiredImages(Date.now(), retentionMsFor(settings.retentionDays));
 
-  const archive = await fetchArchive({
-    n: backfillCount(settings.retentionDays),
+  const source = getSource(settings.source);
+  const entries = await source.listImages({
+    count: backfillCount(settings.retentionDays),
     market: settings.market,
+    now: new Date(),
   });
-  if (archive.length === 0) throw new Error("Bing API returned no image");
+  if (entries.length === 0) throw new Error(t("noWallpaper"));
 
   const results = [];
-  for (const [index, entry] of archive.entries()) {
-    const size = qualityFor(settings.quality, index === 0);
+  for (const [index, entry] of entries.entries()) {
+    const size = source.supportsQuality ? qualityFor(settings.quality, index === 0) : "original";
     try {
-      results.push(await downloadOne(entry, size));
+      results.push(await downloadOne(entry, size, source));
     } catch (error) {
       results.push("error");
       console.warn(`wallpaper ${entry.urlbase} failed`, error);
@@ -124,7 +128,7 @@ async function syncWallpapers() {
 
   const failed = results.filter((result) => result === "error").length;
   const succeeded = results.length - failed;
-  if (succeeded === 0) throw new Error("所有壁纸下载失败");
+  if (succeeded === 0) throw new Error(t("allDownloadFailed"));
 
   const changed = results.filter(
     (result) => result === "downloaded" || result === "updated",

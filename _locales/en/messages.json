@@ -1,0 +1,263 @@
+{
+  "extName": {
+    "message": "Bing Wallpaper HD"
+  },
+  "extDescription": {
+    "message": "Downloads Bing's daily image for your new tab, with a clock and your top sites."
+  },
+  "docTitleNewtab": {
+    "message": "New tab"
+  },
+  "searchPlaceholder": {
+    "message": "Search"
+  },
+  "topSitesLabel": {
+    "message": "Top sites"
+  },
+  "engineBing": {
+    "message": "Bing"
+  },
+  "engineGoogle": {
+    "message": "Google"
+  },
+  "engineBaidu": {
+    "message": "Baidu"
+  },
+  "wallpaperFetchFailed": {
+    "message": "Couldn't fetch the wallpaper, try again later"
+  },
+  "wallpaperReadFailed": {
+    "message": "Couldn't read the wallpaper, refresh to retry"
+  },
+  "pinnedPrefix": {
+    "message": "Pinned"
+  },
+  "periodAm": {
+    "message": "AM"
+  },
+  "periodPm": {
+    "message": "PM"
+  },
+  "appName": {
+    "message": "Bing Wallpaper HD"
+  },
+  "fetchNow": {
+    "message": "Fetch now"
+  },
+  "favorite": {
+    "message": "☆ Star"
+  },
+  "favorited": {
+    "message": "★ Starred"
+  },
+  "favoriteTitle": {
+    "message": "Starred images are never cleaned up automatically"
+  },
+  "favoritedTitle": {
+    "message": "Remove from starred"
+  },
+  "pin": {
+    "message": "📌 Pin"
+  },
+  "pinned": {
+    "message": "📌 Pinned"
+  },
+  "pinTitle": {
+    "message": "Pin as the new tab wallpaper"
+  },
+  "pinnedTitle": {
+    "message": "Unpin and return to the daily wallpaper"
+  },
+  "saveOriginal": {
+    "message": "Save original"
+  },
+  "downloadStarted": {
+    "message": "Downloading the original"
+  },
+  "updatedLabel": {
+    "message": "Updated"
+  },
+  "statusDownloaded": {
+    "message": "Wallpaper updated"
+  },
+  "statusSkipped": {
+    "message": "Wallpaper is up to date"
+  },
+  "statusDownloadedMany": {
+    "message": "Wallpaper updated ($1 images)"
+  },
+  "statusError": {
+    "message": "Failed: $1"
+  },
+  "statusErrorSuffix": {
+    "message": ", showing the last wallpaper"
+  },
+  "emptyHint": {
+    "message": "No wallpaper yet. Fetch one below."
+  },
+  "favoriteFailed": {
+    "message": "Couldn't star: $1"
+  },
+  "pinFailed": {
+    "message": "Couldn't pin: $1"
+  },
+  "pinSet": {
+    "message": "Pinned as wallpaper"
+  },
+  "pinCleared": {
+    "message": "Unpinned, back to the daily wallpaper"
+  },
+  "favoriteRemoved": {
+    "message": "Removed star and pin"
+  },
+  "historyAlt": {
+    "message": "Wallpaper history"
+  },
+  "unknownError": {
+    "message": "Unknown error"
+  },
+  "optionsTitle": {
+    "message": "Bing Wallpaper HD settings"
+  },
+  "optionsLead": {
+    "message": "Wallpaper and cache settings. Changes apply immediately."
+  },
+  "sectionWallpaper": {
+    "message": "Wallpaper"
+  },
+  "labelSource": {
+    "message": "Source"
+  },
+  "sourceHint": {
+    "message": "Applied on the next update; unstarred images from other sources are removed. Non-Bing sources use 1920px thumbnails and backfill up to 3 days."
+  },
+  "sourceBing": {
+    "message": "Bing daily image"
+  },
+  "sourceWikimediaEn": {
+    "message": "Wikimedia picture of the day (English)"
+  },
+  "sourceWikimediaZh": {
+    "message": "Wikimedia picture of the day (Chinese)"
+  },
+  "labelQuality": {
+    "message": "Quality"
+  },
+  "qualityHint": {
+    "message": "UHD is Bing's native 4K; custom sizes are scaled server side, 320×240 to 7680×4320."
+  },
+  "labelCustom": {
+    "message": "Custom"
+  },
+  "applyQuality": {
+    "message": "Apply"
+  },
+  "customOption": {
+    "message": "Custom…"
+  },
+  "labelMarket": {
+    "message": "Region"
+  },
+  "marketHint": {
+    "message": "Affects the language of titles and copyright text; the image is usually the same."
+  },
+  "labelRetention": {
+    "message": "Retention"
+  },
+  "retentionHint": {
+    "message": "Counted by image date. Unstarred images outside the window are removed."
+  },
+  "retentionOption": {
+    "message": "$1 days"
+  },
+  "labelUpdateHour": {
+    "message": "Daily update"
+  },
+  "updateHourHint": {
+    "message": "Also fetched at browser startup and after extension updates."
+  },
+  "sectionClock": {
+    "message": "Date & time"
+  },
+  "labelShowClock": {
+    "message": "Show a clock on the new tab"
+  },
+  "labelShowSeconds": {
+    "message": "Show seconds"
+  },
+  "labelHour24": {
+    "message": "24-hour clock"
+  },
+  "labelDateStyle": {
+    "message": "Date format"
+  },
+  "dateStyleLong": {
+    "message": "Long (Friday, October 23, 2026)"
+  },
+  "dateStyleNumeric": {
+    "message": "Numeric (2026-10-23)"
+  },
+  "dateStyleHidden": {
+    "message": "Hide the date"
+  },
+  "clockHint": {
+    "message": "The clock ticks every second on this device and makes no network requests."
+  },
+  "sectionEffects": {
+    "message": "Wallpaper effects"
+  },
+  "labelBlur": {
+    "message": "Blur"
+  },
+  "labelDim": {
+    "message": "Dim"
+  },
+  "labelGlass": {
+    "message": "Frosted glass panels"
+  },
+  "effectsHint": {
+    "message": "Blur softens the wallpaper, dim improves contrast; frosted glass applies to the search box and clock."
+  },
+  "sectionCache": {
+    "message": "Cache"
+  },
+  "statImages": {
+    "message": "Images"
+  },
+  "statUsage": {
+    "message": "Size"
+  },
+  "statFavorites": {
+    "message": "Starred"
+  },
+  "clearUnpinned": {
+    "message": "Clear unstarred"
+  },
+  "clearAll": {
+    "message": "Clear all"
+  },
+  "clearHint": {
+    "message": "Opening a new tab fetches again; starred images ignore the retention window."
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "invalidSize": {
+    "message": "Width and height must be 320×240 to 7680×4320"
+  },
+  "confirmClearAll": {
+    "message": "Clear all wallpapers? Starred images are removed too."
+  },
+  "clearedCount": {
+    "message": "Cleared $1 images"
+  },
+  "nothingToClear": {
+    "message": "Nothing to clear"
+  },
+  "noWallpaper": {
+    "message": "No wallpaper available"
+  },
+  "allDownloadFailed": {
+    "message": "All wallpapers failed to download"
+  }
+}

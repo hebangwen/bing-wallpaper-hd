@@ -1,10 +1,8 @@
+import { applyI18n, t } from "./i18n.js";
 import { getPinned, setPinned } from "./pin.js";
 import { getAllImages, setFavorite } from "./store.js";
 
-const stateText = {
-  downloaded: "壁纸已更新",
-  skipped: "壁纸已是最新",
-};
+applyI18n();
 
 const objectUrls = new Map();
 let images = [];
@@ -37,23 +35,23 @@ function renderFavorite(image) {
   const button = document.getElementById("favorite");
   const favorite = Boolean(image?.favorite);
   button.setAttribute("aria-pressed", String(favorite));
-  button.textContent = favorite ? "★ 已收藏" : "☆ 收藏";
-  button.title = favorite ? "取消收藏" : "收藏后不会被自动清理";
+  button.textContent = favorite ? t("favorited") : t("favorite");
+  button.title = favorite ? t("favoritedTitle") : t("favoriteTitle");
 }
 
 function renderPin(image) {
   const button = document.getElementById("pin");
   const pinned = Boolean(image) && pinnedUrlbase === image.urlbase;
   button.setAttribute("aria-pressed", String(pinned));
-  button.textContent = pinned ? "📌 已固定" : "📌 固定";
-  button.title = pinned ? "取消固定，恢复每日壁纸" : "固定为新标签页壁纸";
+  button.textContent = pinned ? t("pinned") : t("pin");
+  button.title = pinned ? t("pinnedTitle") : t("pinTitle");
 }
 
 function renderImage(image) {
   const thumbnail = document.getElementById("thumbnail");
   thumbnail.src = objectUrlFor(image);
   thumbnail.hidden = false;
-  document.getElementById("title").textContent = image.title || "Bing Wallpaper HD";
+  document.getElementById("title").textContent = image.title || t("appName");
   document.getElementById("copyright").textContent = image.copyright ?? "";
   document.getElementById("actions").hidden = false;
   renderFavorite(image);
@@ -64,7 +62,7 @@ function renderEmpty() {
   document.getElementById("thumbnail").hidden = true;
   document.getElementById("actions").hidden = true;
   document.getElementById("history").replaceChildren();
-  document.getElementById("title").textContent = "Bing Wallpaper HD";
+  document.getElementById("title").textContent = t("appName");
   document.getElementById("copyright").textContent = "";
 }
 
@@ -103,7 +101,7 @@ function renderHistory(current) {
 
       const thumbnail = document.createElement("img");
       thumbnail.src = objectUrlFor(image);
-      thumbnail.alt = image.title || image.date || "历史壁纸";
+      thumbnail.alt = image.title || image.date || t("historyAlt");
       button.append(thumbnail);
       return button;
     }),
@@ -116,16 +114,21 @@ function renderStatus(status, hasImage) {
   const message = document.getElementById("message");
 
   if (!status) {
-    message.textContent = hasImage ? "" : "尚未获取过壁纸，点击下方按钮立即获取。";
+    message.textContent = hasImage ? "" : t("emptyHint");
     return;
   }
 
   if (status.state === "error") {
-    message.textContent = `获取失败：${status.message ?? "未知错误"}${hasImage ? "，当前显示最近一次壁纸" : ""}`;
+    const error = status.message ?? t("unknownError");
+    message.textContent = t("statusError", [error]) + (hasImage ? t("statusErrorSuffix") : "");
   } else if (status.state === "downloaded" && status.changed > 1) {
-    message.textContent = `${stateText.downloaded}（${status.changed} 张）`;
+    message.textContent = t("statusDownloadedMany", [status.changed]);
+  } else if (status.state === "downloaded") {
+    message.textContent = t("statusDownloaded");
+  } else if (status.state === "skipped") {
+    message.textContent = t("statusSkipped");
   } else {
-    message.textContent = stateText[status.state] ?? "";
+    message.textContent = "";
   }
 
   if (status.updatedAt) {
@@ -195,7 +198,7 @@ document.getElementById("favorite").addEventListener("click", async (event) => {
       await setPinned(null);
       pinnedUrlbase = null;
       renderPin(selected);
-      document.getElementById("message").textContent = "已取消收藏与固定";
+      document.getElementById("message").textContent = t("favoriteRemoved");
     }
 
     const updated = await setFavorite(selected.urlbase, next);
@@ -206,7 +209,7 @@ document.getElementById("favorite").addEventListener("click", async (event) => {
       renderFavorite(selected);
     }
   } catch (error) {
-    document.getElementById("message").textContent = `收藏失败：${error}`;
+    document.getElementById("message").textContent = t("favoriteFailed", [error]);
   } finally {
     button.disabled = false;
   }
@@ -221,7 +224,7 @@ document.getElementById("pin").addEventListener("click", async (event) => {
     if (pinnedUrlbase === selected.urlbase) {
       await setPinned(null);
       pinnedUrlbase = null;
-      document.getElementById("message").textContent = "已取消固定，恢复每日壁纸";
+      document.getElementById("message").textContent = t("pinCleared");
     } else {
       await setPinned(selected.urlbase);
       pinnedUrlbase = selected.urlbase;
@@ -233,13 +236,13 @@ document.getElementById("pin").addEventListener("click", async (event) => {
         const stored = images.find((image) => image.urlbase === updated.urlbase);
         if (stored) stored.favorite = updated.favorite;
       }
-      document.getElementById("message").textContent = "已固定为壁纸";
+      document.getElementById("message").textContent = t("pinSet");
     }
 
     renderPin(selected);
     renderFavorite(selected);
   } catch (error) {
-    document.getElementById("message").textContent = `固定失败：${error}`;
+    document.getElementById("message").textContent = t("pinFailed", [error]);
   } finally {
     button.disabled = false;
   }
@@ -255,7 +258,7 @@ document.getElementById("save").addEventListener("click", () => {
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 
-  document.getElementById("message").textContent = "已开始下载原图";
+  document.getElementById("message").textContent = t("downloadStarted");
 });
 
 document.getElementById("fetch").addEventListener("click", async (event) => {
@@ -266,7 +269,7 @@ document.getElementById("fetch").addEventListener("click", async (event) => {
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "fetch-now" });
-    if (!response?.ok) error = response?.error ?? "未知错误";
+    if (!response?.ok) error = response?.error ?? t("unknownError");
     else fetched = true;
   } catch (sendError) {
     error = String(sendError);
@@ -283,6 +286,6 @@ document.getElementById("fetch").addEventListener("click", async (event) => {
   button.disabled = false;
 
   if (error) {
-    document.getElementById("message").textContent = `获取失败：${error}`;
+    document.getElementById("message").textContent = t("statusError", [error]);
   }
 });

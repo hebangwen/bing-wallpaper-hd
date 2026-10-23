@@ -1,0 +1,263 @@
+{
+  "extName": {
+    "message": "Bing Wallpaper HD"
+  },
+  "extDescription": {
+    "message": "每天自动下载 Bing 每日一图，用作新标签页壁纸，并展示日期时间与最常访问站点。"
+  },
+  "docTitleNewtab": {
+    "message": "新标签页"
+  },
+  "searchPlaceholder": {
+    "message": "搜索"
+  },
+  "topSitesLabel": {
+    "message": "最常访问"
+  },
+  "engineBing": {
+    "message": "Bing"
+  },
+  "engineGoogle": {
+    "message": "Google"
+  },
+  "engineBaidu": {
+    "message": "百度"
+  },
+  "wallpaperFetchFailed": {
+    "message": "壁纸获取失败，请稍后重试"
+  },
+  "wallpaperReadFailed": {
+    "message": "壁纸读取失败，请刷新重试"
+  },
+  "pinnedPrefix": {
+    "message": "已固定"
+  },
+  "periodAm": {
+    "message": "上午"
+  },
+  "periodPm": {
+    "message": "下午"
+  },
+  "appName": {
+    "message": "Bing Wallpaper HD"
+  },
+  "fetchNow": {
+    "message": "立即获取"
+  },
+  "favorite": {
+    "message": "☆ 收藏"
+  },
+  "favorited": {
+    "message": "★ 已收藏"
+  },
+  "favoriteTitle": {
+    "message": "收藏后不会被自动清理"
+  },
+  "favoritedTitle": {
+    "message": "取消收藏"
+  },
+  "pin": {
+    "message": "📌 固定"
+  },
+  "pinned": {
+    "message": "📌 已固定"
+  },
+  "pinTitle": {
+    "message": "固定为新标签页壁纸"
+  },
+  "pinnedTitle": {
+    "message": "取消固定，恢复每日壁纸"
+  },
+  "saveOriginal": {
+    "message": "保存原图"
+  },
+  "downloadStarted": {
+    "message": "已开始下载原图"
+  },
+  "updatedLabel": {
+    "message": "更新时间"
+  },
+  "statusDownloaded": {
+    "message": "壁纸已更新"
+  },
+  "statusSkipped": {
+    "message": "壁纸已是最新"
+  },
+  "statusDownloadedMany": {
+    "message": "壁纸已更新（$1 张）"
+  },
+  "statusError": {
+    "message": "获取失败：$1"
+  },
+  "statusErrorSuffix": {
+    "message": "，当前显示最近一次壁纸"
+  },
+  "emptyHint": {
+    "message": "尚未获取过壁纸，点击下方按钮立即获取。"
+  },
+  "favoriteFailed": {
+    "message": "收藏失败：$1"
+  },
+  "pinFailed": {
+    "message": "固定失败：$1"
+  },
+  "pinSet": {
+    "message": "已固定为壁纸"
+  },
+  "pinCleared": {
+    "message": "已取消固定，恢复每日壁纸"
+  },
+  "favoriteRemoved": {
+    "message": "已取消收藏与固定"
+  },
+  "historyAlt": {
+    "message": "历史壁纸"
+  },
+  "unknownError": {
+    "message": "未知错误"
+  },
+  "optionsTitle": {
+    "message": "Bing Wallpaper HD 设置"
+  },
+  "optionsLead": {
+    "message": "新标签页壁纸与缓存设置，修改后立即生效。"
+  },
+  "sectionWallpaper": {
+    "message": "壁纸"
+  },
+  "labelSource": {
+    "message": "图源"
+  },
+  "sourceHint": {
+    "message": "切换后下次更新生效，并清除未收藏的旧源图片；非 Bing 源使用 1920px 缩略图，最多回填 3 天。"
+  },
+  "sourceBing": {
+    "message": "Bing 每日一图"
+  },
+  "sourceWikimediaEn": {
+    "message": "维基百科每日图片（英文）"
+  },
+  "sourceWikimediaZh": {
+    "message": "维基百科每日图片（中文）"
+  },
+  "labelQuality": {
+    "message": "画质"
+  },
+  "qualityHint": {
+    "message": "UHD 为 Bing 原生 4K；自定义尺寸由服务端缩放，范围 320×240 ~ 7680×4320。"
+  },
+  "labelCustom": {
+    "message": "自定义"
+  },
+  "applyQuality": {
+    "message": "应用"
+  },
+  "customOption": {
+    "message": "自定义…"
+  },
+  "labelMarket": {
+    "message": "地区"
+  },
+  "marketHint": {
+    "message": "影响标题与版权文案的语言，图片通常相同。"
+  },
+  "labelRetention": {
+    "message": "保留天数"
+  },
+  "retentionHint": {
+    "message": "按壁纸日期计算；超出且未收藏的图片会被自动清理。"
+  },
+  "retentionOption": {
+    "message": "$1 天"
+  },
+  "labelUpdateHour": {
+    "message": "每日更新"
+  },
+  "updateHourHint": {
+    "message": "到点、浏览器启动或扩展更新时会自动拉取。"
+  },
+  "sectionClock": {
+    "message": "日期与时间"
+  },
+  "labelShowClock": {
+    "message": "在新标签页显示时钟"
+  },
+  "labelShowSeconds": {
+    "message": "时间精确到秒"
+  },
+  "labelHour24": {
+    "message": "24 小时制"
+  },
+  "labelDateStyle": {
+    "message": "日期格式"
+  },
+  "dateStyleLong": {
+    "message": "完整（2026年10月23日 星期五）"
+  },
+  "dateStyleNumeric": {
+    "message": "数字（2026-10-23）"
+  },
+  "dateStyleHidden": {
+    "message": "不显示日期"
+  },
+  "clockHint": {
+    "message": "时钟每秒刷新，只在本机渲染，不产生网络请求。"
+  },
+  "sectionEffects": {
+    "message": "壁纸效果"
+  },
+  "labelBlur": {
+    "message": "模糊"
+  },
+  "labelDim": {
+    "message": "暗化"
+  },
+  "labelGlass": {
+    "message": "毛玻璃面板"
+  },
+  "effectsHint": {
+    "message": "模糊让壁纸更柔和，暗化提升文字对比；毛玻璃作用于搜索框和时钟。"
+  },
+  "sectionCache": {
+    "message": "缓存"
+  },
+  "statImages": {
+    "message": "图片"
+  },
+  "statUsage": {
+    "message": "占用"
+  },
+  "statFavorites": {
+    "message": "收藏"
+  },
+  "clearUnpinned": {
+    "message": "清除未收藏"
+  },
+  "clearAll": {
+    "message": "清除全部"
+  },
+  "clearHint": {
+    "message": "清除后打开新标签页会自动重新获取；收藏的图片不受保留期限制。"
+  },
+  "saved": {
+    "message": "已保存"
+  },
+  "invalidSize": {
+    "message": "宽高需在 320×240 到 7680×4320 之间"
+  },
+  "confirmClearAll": {
+    "message": "清除全部壁纸？收藏的图片也会删除。"
+  },
+  "clearedCount": {
+    "message": "已清除 $1 张"
+  },
+  "nothingToClear": {
+    "message": "没有可清除的图片"
+  },
+  "noWallpaper": {
+    "message": "没有可用的壁纸"
+  },
+  "allDownloadFailed": {
+    "message": "所有壁纸下载失败"
+  }
+}

@@ -84,6 +84,16 @@ test("normalizes clock settings", () => {
   assert.equal(normalizeSettings({ dateStyle: "iso" }).dateStyle, "long");
 });
 
+test("normalizes effects and the wallpaper source", () => {
+  assert.equal(normalizeSettings({ source: "wikimedia-en" }).source, "wikimedia-en");
+  assert.equal(normalizeSettings({ source: "nope" }).source, "bing");
+  assert.equal(normalizeSettings({ wallpaperBlur: 99 }).wallpaperBlur, 40);
+  assert.equal(normalizeSettings({ wallpaperBlur: -5 }).wallpaperBlur, 0);
+  assert.equal(normalizeSettings({ wallpaperDim: 120 }).wallpaperDim, 70);
+  assert.equal(normalizeSettings({ glassEffect: false }).glassEffect, false);
+  assert.equal(normalizeSettings({ glassEffect: "on" }).glassEffect, true);
+});
+
 test("caps the backfill window at eight days", () => {
   assert.equal(backfillCount(1), 1);
   assert.equal(backfillCount(7), 7);

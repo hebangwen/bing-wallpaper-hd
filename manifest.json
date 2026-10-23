@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bing Wallpaper HD",
-  "version": "1.4.1",
-  "description": "每天自动下载 Bing 每日一图 UHD，用作新标签页壁纸，并展示最常访问站点。",
+  "name": "__MSG_extName__",
+  "version": "1.5.0",
+  "description": "__MSG_extDescription__",
   "minimum_chrome_version": "103",
   "permissions": [
     "alarms",
@@ -39,5 +39,6 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "default_locale": "zh_CN"
 }

@@ -173,6 +173,23 @@ export function deleteOldestImage() {
   });
 }
 
+// 切换图源时清掉其它源的历史图，收藏的保留。
+export function deleteImagesExceptSource(source) {
+  return transact("readwrite", async (store) => {
+    let deleted = 0;
+
+    await visitCursor(store.openCursor(), (cursor) => {
+      const image = cursor.value;
+      if (image.favorite) return;
+      if ((image.source ?? "bing") === source) return;
+      cursor.delete();
+      deleted += 1;
+    });
+
+    return deleted;
+  });
+}
+
 export function clearImages({ keepFavorites = false } = {}) {
   return transact("readwrite", async (store) => {
     let deleted = 0;

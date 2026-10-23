@@ -3,8 +3,12 @@ export const QUALITIES = PRESET_QUALITIES;
 export const HISTORY_QUALITY = "1920x1080";
 export const MARKETS = ["zh-CN", "en-US", "ja-JP", "de-DE", "fr-FR"];
 export const DATE_STYLES = ["long", "numeric", "hidden"];
+export const SOURCE_IDS = ["bing", "wikimedia-en", "wikimedia-zh"];
 export const MAX_BACKFILL_DAYS = 8;
 export const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const MAX_WALLPAPER_BLUR = 40;
+export const MAX_WALLPAPER_DIM = 70;
 
 export const MIN_CUSTOM_WIDTH = 320;
 export const MAX_CUSTOM_WIDTH = 7680;
@@ -20,6 +24,10 @@ export const DEFAULT_SETTINGS = {
   showSeconds: true,
   hour24: true,
   dateStyle: "long",
+  source: "bing",
+  wallpaperBlur: 0,
+  wallpaperDim: 0,
+  glassEffect: true,
 };
 
 const CUSTOM_QUALITY = /^(\d{3,4})x(\d{3,4})$/;
@@ -72,6 +80,10 @@ export function normalizeSettings(raw) {
     dateStyle: DATE_STYLES.includes(settings.dateStyle)
       ? settings.dateStyle
       : DEFAULT_SETTINGS.dateStyle,
+    source: SOURCE_IDS.includes(settings.source) ? settings.source : DEFAULT_SETTINGS.source,
+    wallpaperBlur: clampInt(settings.wallpaperBlur, 0, MAX_WALLPAPER_BLUR, DEFAULT_SETTINGS.wallpaperBlur),
+    wallpaperDim: clampInt(settings.wallpaperDim, 0, MAX_WALLPAPER_DIM, DEFAULT_SETTINGS.wallpaperDim),
+    glassEffect: asBoolean(settings.glassEffect, DEFAULT_SETTINGS.glassEffect),
   };
 }
 
