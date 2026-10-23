@@ -12,6 +12,41 @@ body {
   object-fit: cover;
 }
 
+#clock {
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #fff;
+  font-family: -apple-system, "PingFang SC", sans-serif;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+#clock[hidden] {
+  display: none;
+}
+
+#clock-time {
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+#clock-date {
+  margin: 8px 0 0;
+  font-size: 15px;
+  opacity: 0.92;
+}
+
+#clock-date[hidden] {
+  display: none;
+}
+
 #search {
   position: fixed;
   left: 50%;
@@ -190,8 +225,21 @@ body {
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
+:root[data-tone="light"] #clock {
+  color: #12171b;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.7);
+}
+
 @media (max-width: 640px) {
   #top-sites {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  #clock-time {
+    font-size: 44px;
+  }
+
+  #clock-date {
+    font-size: 13px;
   }
 }

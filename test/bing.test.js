@@ -44,6 +44,21 @@ test("buildApiUrl carries the archive size and market", () => {
   assert.equal(url.searchParams.get("format"), "js");
 });
 
+test("builds a server-scaled url for a custom size", () => {
+  assert.equal(
+    buildWallpaperUrl("/th?id=OHR.ElGolfo_ZH-CN8329995759", "2560x1440"),
+    "https://www.bing.com/th?id=OHR.ElGolfo_ZH-CN8329995759_UHD.jpg&w=2560&h=1440&rs=1&c=4",
+  );
+  assert.equal(
+    buildWallpaperUrl("/th?id=OHR.ElGolfo_ZH-CN8329995759", "1024x768"),
+    "https://www.bing.com/th?id=OHR.ElGolfo_ZH-CN8329995759_1920x1080.jpg&w=1024&h=768&rs=1&c=4",
+  );
+  assert.equal(
+    buildWallpaperUrl("/th?id=OHR.X", "1280x720"),
+    "https://www.bing.com/th?id=OHR.X_1280x720.jpg",
+  );
+});
+
 test("parses the first image from the Bing response", () => {
   assert.deepEqual(parseDailyImage({ images: [IMAGE] }), {
     urlbase: "/th?id=OHR.ElGolfo_ZH-CN8329995759",

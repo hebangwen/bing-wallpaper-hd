@@ -1,5 +1,7 @@
+import { formatDateLine, formatTime } from "./clock.js";
 import { getLatestImage } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
+import { loadSettings } from "./settings.js";
 import { resolveTone } from "./tone.js";
 import { topSitesFrom } from "./top-sites.js";
 
@@ -103,6 +105,44 @@ async function showTopSites() {
 
 showTopSites();
 
+const clock = document.getElementById("clock");
+const clockTime = document.getElementById("clock-time");
+const clockDate = document.getElementById("clock-date");
+
+let clockTimer;
+
+function renderClock(settings) {
+  const now = new Date();
+  clockTime.textContent = formatTime(now, settings);
+  clockTime.dateTime = now.toISOString();
+
+  const line = formatDateLine(now, settings.dateStyle);
+  clockDate.textContent = line;
+  clockDate.hidden = !line;
+}
+
+async function setupClock() {
+  clearTimeout(clockTimer);
+  const settings = await loadSettings();
+
+  clock.hidden = !settings.showClock;
+  if (!settings.showClock) return;
+
+  renderClock(settings);
+  const tick = () => {
+    renderClock(settings);
+    // 对齐到下一个整秒，避免长时间运行后逐秒漂移。
+    clockTimer = setTimeout(tick, 1000 - (Date.now() % 1000) + 10);
+  };
+  clockTimer = setTimeout(tick, 1000 - (Date.now() % 1000) + 10);
+}
+
+setupClock();
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.settings) setupClock();
+});
+
 let wallpaperUrl;
 
 function setWallpaper(blob) {
@@ -112,6 +152,7 @@ function setWallpaper(blob) {
 }
 
 addEventListener("pagehide", () => {
+  clearTimeout(clockTimer);
   if (!wallpaperUrl) return;
   URL.revokeObjectURL(wallpaperUrl);
   wallpaperUrl = undefined;

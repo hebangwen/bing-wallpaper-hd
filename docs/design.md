@@ -4,18 +4,19 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 
 | 模块 | 职责 |
 | --- | --- |
-| `src/settings.js` | 设置默认值、校验与派生：画质、保留天数、更新时间、地区；历史图画质上限 1080p；下一次运行时间 |
-| `src/bing.js` | Bing HPImageArchive 接口，解析归档（保留 `copyrightlink` / `drk`），按画质构造图片 URL |
+| `src/settings.js` | 设置默认值与校验：画质（预设或自定义宽高）、保留天数、更新时间、地区、日期时间显示；历史图画质上限 1080p；下一次运行时间 |
+| `src/bing.js` | Bing HPImageArchive 接口，解析归档（保留 `copyrightlink` / `drk`）；预设画质用原生资源，自定义宽高走 `&w=&h=&rs=1&c=4` 服务端缩放 |
 | `src/network.js` | 统一 `fetch` 超时与重试策略，供 Bing API 和图片下载复用 |
 | `src/thumbnail.js` | 在 Service Worker 中用 `OffscreenCanvas` 生成 640px WebP 缩略图；环境不支持时返回 `null`，界面回退原图 |
+| `src/clock.js` | 日期与时间的纯格式化函数：12/24 小时制、是否带秒、完整/数字日期 |
 | `src/tone.js` | 由 `drk` 字段或 32px 采样亮度判定图片色调，驱动新标签页文字配色 |
 | `src/store.js` | IndexedDB 缓存：`fetchedAt` / `date` 索引、保留期清理（跳过收藏）、配额淘汰（跳过收藏）、收藏切换、清空 |
 | `src/service-worker.js` | 单一同步任务：按设置拉取最近 N 天（当日用所选画质、历史 1080p），逐张入库并生成缩略图，单张失败不阻塞其余；失败时角标 `!` |
-| `src/options.*` | 选项页：画质、地区、保留天数、更新时间，缓存统计与清理 |
+| `src/options.*` | 选项页：画质（含自定义宽高）、地区、保留天数、更新时间、日期时间、缓存统计与清理 |
 | `src/popup.*` | 当日壁纸、历史（缩略图）、收藏、保存原图、手动触发、运行状态 |
 | `src/top-sites.js` | 将 `chrome.topSites` 原始结果归一化为展示模型：仅保留 http(s)、按域名去重、标题回退域名、限制数量 |
 | `src/site-icons.js` | 读取站点声明的 SVG 或高分辨率图标，校验实际像素尺寸，按域名缓存 7 天；缓存按 TTL 和数量上限清理 |
-| `src/newtab.*` | 新标签页覆盖（`chrome_url_overrides`）：壁纸、色调自适应、搜索、最常访问站点 |
+| `src/newtab.*` | 新标签页覆盖（`chrome_url_overrides`）：壁纸、时钟、色调自适应、搜索、最常访问站点 |
 
 存储单一真相源：图片记录只存 IndexedDB（`urlbase`、`blob`、`thumb`、`size`、`date`、`fetchedAt`、`favorite`、`title`、`copyright`、`copyrightlink`、`drk`）；`status` 只记录最近一次运行结果；`settings` 存 `chrome.storage.local`；`siteIcons` 存 `chrome.storage.local` 并受 TTL 与数量上限约束。
 
@@ -28,6 +29,8 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 设置变更：选项页保存后向 Service Worker 发送 `reschedule`，重排 alarm 并按新保留期立即清理；Service Worker 同时监听 `chrome.storage.onChanged` 作为兜底（该事件不负责唤醒 Service Worker）。
 
 可读性：优先用 Bing 返回的 `drk`（1 表示暗图），缺失时采样缩略图平均亮度，阈值 150 判定亮图，CSS 通过 `:root[data-tone="light"]` 切换文字、阴影与搜索框描边。
+
+日期时间：`clock.js` 只负责纯格式化，新标签页按设置渲染并每秒对齐整秒刷新，页面关闭时清理定时器；`chrome.storage.onChanged` 让设置改动在当前标签页立即生效。时钟不发起网络请求。
 
 高清图标需要读取任意最常访问站点的 HTML，`manifest.json` 声明 http/https 主机权限；SVG 不设像素下限，栅格图标至少 40px，低于该尺寸时保留 Chrome favicon。图标按 20px 展示。
 

@@ -15,11 +15,21 @@
     <section>
       <h2>壁纸</h2>
 
-      <label class="field">
+      <div class="field">
         <span>画质</span>
         <select id="quality"></select>
-        <small>UHD 约 3.6 MB/张；历史图固定用 1080p，控制总体积。</small>
-      </label>
+        <small>UHD 为 Bing 原生 4K；自定义尺寸由服务端缩放，范围 320×240 ~ 7680×4320。</small>
+      </div>
+
+      <div class="field" id="custom-quality" hidden>
+        <span>自定义</span>
+        <div class="inline">
+          <input id="custom-width" type="number" min="320" max="7680" step="1" aria-label="宽度" />
+          <span>×</span>
+          <input id="custom-height" type="number" min="240" max="4320" step="1" aria-label="高度" />
+          <button id="apply-quality" type="button">应用</button>
+        </div>
+      </div>
 
       <label class="field">
         <span>地区</span>
@@ -38,6 +48,32 @@
         <select id="hour"></select>
         <small>到点、浏览器启动或扩展更新时会自动拉取。</small>
       </label>
+    </section>
+
+    <section>
+      <h2>日期与时间</h2>
+
+      <label class="field checkbox">
+        <input id="show-clock" type="checkbox" />
+        <span>在新标签页显示时钟</span>
+      </label>
+
+      <label class="field checkbox">
+        <input id="show-seconds" type="checkbox" />
+        <span>时间精确到秒</span>
+      </label>
+
+      <label class="field checkbox">
+        <input id="hour24" type="checkbox" />
+        <span>24 小时制</span>
+      </label>
+
+      <label class="field">
+        <span>日期格式</span>
+        <select id="date-style"></select>
+      </label>
+
+      <small>时钟每秒刷新，只在本机渲染，不产生网络请求。</small>
     </section>
 
     <section>

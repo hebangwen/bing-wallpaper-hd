@@ -80,6 +80,50 @@ section {
   line-height: 1.5;
 }
 
+.field.checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.field.checkbox input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.field select:disabled,
+.field input:disabled {
+  opacity: 0.45;
+}
+
+#custom-quality[hidden] {
+  display: none;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline input[type="number"] {
+  width: 92px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.inline button {
+  padding: 7px 12px;
+}
+
 select {
   justify-self: start;
   min-width: 200px;

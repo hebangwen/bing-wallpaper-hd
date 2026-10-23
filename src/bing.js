@@ -1,5 +1,5 @@
 import { fetchWithRetry } from "./network.js";
-import { QUALITIES } from "./settings.js";
+import { PRESET_QUALITIES, parseQuality } from "./settings.js";
 
 const API_URL = "https://www.bing.com/HPImageArchive.aspx";
 const DEFAULT_QUALITY = "UHD";
@@ -13,9 +13,18 @@ export function buildApiUrl({ n = 1, market = "zh-CN" } = {}) {
   return url.toString();
 }
 
+// 预设档位使用 Bing 预生成的资源；自定义宽高从最接近的原生尺寸请求服务端缩放。
 export function buildWallpaperUrl(urlbase, size = DEFAULT_QUALITY) {
-  const quality = QUALITIES.includes(size) ? size : DEFAULT_QUALITY;
-  return `https://www.bing.com${urlbase}_${quality}.jpg`;
+  const quality = parseQuality(size) ?? DEFAULT_QUALITY;
+
+  if (PRESET_QUALITIES.includes(quality)) {
+    return `https://www.bing.com${urlbase}_${quality}.jpg`;
+  }
+
+  const [width, height] = quality.split("x").map(Number);
+  const source = width > 1920 || height > 1080 ? "UHD" : "1920x1080";
+  const separator = urlbase.includes("?") ? "&" : "?";
+  return `https://www.bing.com${urlbase}_${source}.jpg${separator}w=${width}&h=${height}&rs=1&c=4`;
 }
 
 function parseImage(image) {

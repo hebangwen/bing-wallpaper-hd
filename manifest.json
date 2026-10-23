@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bing Wallpaper HD",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "每天自动下载 Bing 每日一图 UHD，用作新标签页壁纸，并展示最常访问站点。",
   "minimum_chrome_version": "103",
   "permissions": [

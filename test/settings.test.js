@@ -7,6 +7,7 @@ import {
   backfillCount,
   nextRunAt,
   normalizeSettings,
+  parseQuality,
   qualityFor,
   retentionMsFor,
 } from "../src/settings.js";
@@ -17,10 +18,18 @@ test("falls back to defaults for an empty or missing object", () => {
 });
 
 test("keeps valid values and clamps numeric ranges", () => {
-  assert.deepEqual(
-    normalizeSettings({ quality: "1920x1080", retentionDays: 14, updateHour: 21, market: "en-US" }),
-    { quality: "1920x1080", retentionDays: 14, updateHour: 21, market: "en-US" },
-  );
+  const settings = normalizeSettings({
+    quality: "1920x1080",
+    retentionDays: 14,
+    updateHour: 21,
+    market: "en-US",
+  });
+
+  assert.equal(settings.quality, "1920x1080");
+  assert.equal(settings.retentionDays, 14);
+  assert.equal(settings.updateHour, 21);
+  assert.equal(settings.market, "en-US");
+  assert.equal(settings.showClock, true);
 
   assert.equal(normalizeSettings({ retentionDays: 0 }).retentionDays, 1);
   assert.equal(normalizeSettings({ retentionDays: 99 }).retentionDays, 30);
@@ -34,15 +43,45 @@ test("rejects unknown quality and market values", () => {
   assert.equal(normalizeSettings({ market: "xx-XX" }).market, DEFAULT_SETTINGS.market);
 });
 
+test("accepts a custom resolution inside the supported range", () => {
+  assert.equal(parseQuality("2560x1440"), "2560x1440");
+  assert.equal(parseQuality("3840x2160"), "3840x2160");
+  assert.equal(parseQuality("1024x768"), "1024x768");
+  assert.equal(normalizeSettings({ quality: "2560x1440" }).quality, "2560x1440");
+  assert.equal(parseQuality("1920x1080"), "1920x1080");
+});
+
+test("rejects custom resolutions outside the supported range", () => {
+  assert.equal(parseQuality("200x200"), null);
+  assert.equal(parseQuality("9000x5000"), null);
+  assert.equal(parseQuality("abc"), null);
+  assert.equal(parseQuality("2560X1440"), null);
+  assert.equal(parseQuality("2560x1440px"), null);
+  assert.equal(normalizeSettings({ quality: "9000x5000" }).quality, "UHD");
+});
+
 test("uses UHD for today and caps history at 1080p", () => {
   assert.equal(qualityFor("UHD", true), "UHD");
   assert.equal(qualityFor("UHD", false), "1920x1080");
   assert.equal(qualityFor("1920x1200", false), "1920x1080");
   assert.equal(qualityFor("1920x1080", false), "1920x1080");
   assert.equal(qualityFor("1366x768", false), "1366x768");
+  assert.equal(qualityFor("2560x1440", false), "1920x1080");
+  assert.equal(qualityFor("2560x1440", true), "2560x1440");
+  assert.equal(qualityFor("1024x768", false), "1024x768");
   // 非法画质先归一到默认 UHD，再按历史规则降到 1080p。
   assert.equal(qualityFor("bogus", false), "1920x1080");
   assert.equal(qualityFor("bogus", true), QUALITIES[0]);
+});
+
+test("normalizes clock settings", () => {
+  assert.equal(DEFAULT_SETTINGS.showClock, true);
+  assert.equal(DEFAULT_SETTINGS.showSeconds, true);
+  assert.equal(normalizeSettings({ showClock: false }).showClock, false);
+  assert.equal(normalizeSettings({ showSeconds: "no" }).showSeconds, true);
+  assert.equal(normalizeSettings({ hour24: false }).hour24, false);
+  assert.equal(normalizeSettings({ dateStyle: "numeric" }).dateStyle, "numeric");
+  assert.equal(normalizeSettings({ dateStyle: "iso" }).dateStyle, "long");
 });
 
 test("caps the backfill window at eight days", () => {
