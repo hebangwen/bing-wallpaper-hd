@@ -1,3 +1,4 @@
+import { getPinned, setPinned } from "./pin.js";
 import { getAllImages, setFavorite } from "./store.js";
 
 const stateText = {
@@ -8,6 +9,7 @@ const stateText = {
 const objectUrls = new Map();
 let images = [];
 let selected = null;
+let pinnedUrlbase = null;
 
 function objectUrlFor(image) {
   let url = objectUrls.get(image.urlbase);
@@ -39,6 +41,14 @@ function renderFavorite(image) {
   button.title = favorite ? "取消收藏" : "收藏后不会被自动清理";
 }
 
+function renderPin(image) {
+  const button = document.getElementById("pin");
+  const pinned = Boolean(image) && pinnedUrlbase === image.urlbase;
+  button.setAttribute("aria-pressed", String(pinned));
+  button.textContent = pinned ? "📌 已固定" : "📌 固定";
+  button.title = pinned ? "取消固定，恢复每日壁纸" : "固定为新标签页壁纸";
+}
+
 function renderImage(image) {
   const thumbnail = document.getElementById("thumbnail");
   thumbnail.src = objectUrlFor(image);
@@ -47,6 +57,7 @@ function renderImage(image) {
   document.getElementById("copyright").textContent = image.copyright ?? "";
   document.getElementById("actions").hidden = false;
   renderFavorite(image);
+  renderPin(image);
 }
 
 function renderEmpty() {
@@ -113,14 +124,19 @@ function renderStatus(status, hasImage) {
 }
 
 async function refresh() {
-  const [{ status }, allImages] = await Promise.all([
+  const [{ status }, allImages, pinned] = await Promise.all([
     chrome.storage.local.get("status"),
     getAllImages(),
+    getPinned(),
   ]);
 
+  pinnedUrlbase = pinned;
   images = [...allImages].sort(newestFirst);
+
   const latest = images[0] ?? null;
-  selected = images.find((image) => image.urlbase === selected?.urlbase) ?? latest;
+  const pinnedImage = pinned ? images.find((image) => image.urlbase === pinned) : null;
+  selected =
+    images.find((image) => image.urlbase === selected?.urlbase) ?? pinnedImage ?? latest;
 
   renderStatus(status, Boolean(latest));
   if (!selected) {
@@ -145,7 +161,16 @@ document.getElementById("favorite").addEventListener("click", async (event) => {
   const button = event.currentTarget;
   button.disabled = true;
   try {
-    const updated = await setFavorite(selected.urlbase, !selected.favorite);
+    const next = !selected.favorite;
+    // 取消收藏会同时解除固定，避免固定图被保留期清理。
+    if (!next && pinnedUrlbase === selected.urlbase) {
+      await setPinned(null);
+      pinnedUrlbase = null;
+      renderPin(selected);
+      document.getElementById("message").textContent = "已取消收藏与固定";
+    }
+
+    const updated = await setFavorite(selected.urlbase, next);
     if (updated) {
       selected.favorite = updated.favorite;
       const stored = images.find((image) => image.urlbase === updated.urlbase);
@@ -154,6 +179,39 @@ document.getElementById("favorite").addEventListener("click", async (event) => {
     }
   } catch (error) {
     document.getElementById("message").textContent = `收藏失败：${error}`;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("pin").addEventListener("click", async (event) => {
+  if (!selected) return;
+
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    if (pinnedUrlbase === selected.urlbase) {
+      await setPinned(null);
+      pinnedUrlbase = null;
+      document.getElementById("message").textContent = "已取消固定，恢复每日壁纸";
+    } else {
+      await setPinned(selected.urlbase);
+      pinnedUrlbase = selected.urlbase;
+
+      // 固定图必须同时收藏，才能免于保留期清理和配额淘汰。
+      const updated = await setFavorite(selected.urlbase, true);
+      if (updated) {
+        selected.favorite = updated.favorite;
+        const stored = images.find((image) => image.urlbase === updated.urlbase);
+        if (stored) stored.favorite = updated.favorite;
+      }
+      document.getElementById("message").textContent = "已固定为壁纸";
+    }
+
+    renderPin(selected);
+    renderFavorite(selected);
+  } catch (error) {
+    document.getElementById("message").textContent = `固定失败：${error}`;
   } finally {
     button.disabled = false;
   }

@@ -9,16 +9,19 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 | `src/network.js` | 统一 `fetch` 超时与重试策略，供 Bing API 和图片下载复用 |
 | `src/thumbnail.js` | 在 Service Worker 中用 `OffscreenCanvas` 生成 640px WebP 缩略图；环境不支持时返回 `null`，界面回退原图 |
 | `src/clock.js` | 日期与时间的纯格式化函数：12/24 小时制、是否带秒、完整/数字日期 |
+| `src/pin.js` | 固定壁纸：读写 `pinnedUrlbase`，固定图缺失时回退最新壁纸，生成带「已固定」前缀的说明文字 |
 | `src/tone.js` | 由 `drk` 字段或 32px 采样亮度判定图片色调，驱动新标签页文字配色 |
 | `src/store.js` | IndexedDB 缓存：`fetchedAt` / `date` 索引、保留期清理（跳过收藏）、配额淘汰（跳过收藏）、收藏切换、清空 |
 | `src/service-worker.js` | 单一同步任务：按设置拉取最近 N 天（当日用所选画质、历史 1080p），逐张入库并生成缩略图，单张失败不阻塞其余；失败时角标 `!` |
 | `src/options.*` | 选项页：画质（含自定义宽高）、地区、保留天数、更新时间、日期时间、缓存统计与清理 |
-| `src/popup.*` | 当日壁纸、历史（缩略图）、收藏、保存原图、手动触发、运行状态 |
+| `src/popup.*` | 当日壁纸、历史（缩略图）、收藏、固定、保存原图、手动触发、运行状态 |
 | `src/top-sites.js` | 将 `chrome.topSites` 原始结果归一化为展示模型：仅保留 http(s)、按域名去重、标题回退域名、限制数量 |
 | `src/site-icons.js` | 读取站点声明的 SVG 或高分辨率图标，校验实际像素尺寸，按域名缓存 7 天；缓存按 TTL 和数量上限清理 |
-| `src/newtab.*` | 新标签页覆盖（`chrome_url_overrides`）：壁纸、时钟、色调自适应、搜索、最常访问站点 |
+| `src/newtab.*` | 新标签页覆盖（`chrome_url_overrides`）：壁纸（优先固定图）、时钟、色调自适应、搜索、最常访问站点 |
 
-存储单一真相源：图片记录只存 IndexedDB（`urlbase`、`blob`、`thumb`、`size`、`date`、`fetchedAt`、`favorite`、`title`、`copyright`、`copyrightlink`、`drk`）；`status` 只记录最近一次运行结果；`settings` 存 `chrome.storage.local`；`siteIcons` 存 `chrome.storage.local` 并受 TTL 与数量上限约束。
+存储单一真相源：图片记录只存 IndexedDB（`urlbase`、`blob`、`thumb`、`size`、`date`、`fetchedAt`、`favorite`、`title`、`copyright`、`copyrightlink`、`drk`）；`status` 只记录最近一次运行结果；`settings` 与 `pinnedUrlbase` 存 `chrome.storage.local`；`siteIcons` 存 `chrome.storage.local` 并受 TTL 与数量上限约束。
+
+固定壁纸：`pinnedUrlbase` 指向某条图片记录，新标签页优先展示它并加「已固定」前缀；固定时自动置 `favorite`，复用「收藏免清理」的保护链，取消收藏会同时解除固定。固定图被手动清除后，新标签页回退最新壁纸并自动清除失效指针。
 
 数据库版本 4：v1→v2 清空重建；v3 增加 `fetchedAt` 索引；v4 增加 `date` 索引。`getLatestImage` 按图片日期而非下载时间取最新，回填多天后仍显示当天壁纸。
 

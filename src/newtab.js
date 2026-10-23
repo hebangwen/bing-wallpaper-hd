@@ -1,5 +1,6 @@
 import { formatDateLine, formatTime } from "./clock.js";
-import { getLatestImage } from "./store.js";
+import { captionFor, getPinned, pickDisplayImage, setPinned } from "./pin.js";
+import { getImage, getLatestImage } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
 import { loadSettings } from "./settings.js";
 import { resolveTone } from "./tone.js";
@@ -140,7 +141,11 @@ async function setupClock() {
 setupClock();
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.settings) setupClock();
+  if (area !== "local") return;
+  if (changes.settings) setupClock();
+  if (changes.pinnedUrlbase) {
+    showLatest().catch(() => {});
+  }
 });
 
 let wallpaperUrl;
@@ -159,15 +164,22 @@ addEventListener("pagehide", () => {
 });
 
 async function showLatest() {
+  const pinnedUrlbase = await getPinned();
+  const pinnedImage = pinnedUrlbase ? await getImage(pinnedUrlbase) : null;
   const latest = await getLatestImage();
-  if (!latest) return false;
-  setWallpaper(latest.blob);
-  document.getElementById("caption").textContent = [latest.title, latest.copyright]
-    .filter(Boolean)
-    .join(" · ");
+  const { image, pinned } = pickDisplayImage({ pinnedUrlbase, pinnedImage, latest });
+  if (!image) return false;
+
+  // 固定图已被清理时解除固定，下次打开回到每日壁纸。
+  if (pinnedUrlbase && !pinnedImage) {
+    await setPinned(null).catch(() => {});
+  }
+
+  setWallpaper(image.blob);
+  document.getElementById("caption").textContent = captionFor(image, pinned);
   document.documentElement.dataset.tone = await resolveTone({
-    drk: latest.drk,
-    blob: latest.thumb ?? latest.blob,
+    drk: image.drk,
+    blob: image.thumb ?? image.blob,
   });
   return true;
 }
