@@ -10,6 +10,7 @@ import {
   getAllImages,
   getImage,
   getLatestImage,
+  pruneDuplicateImages,
   putImage,
   setFavorite,
 } from "../src/store.js";
@@ -164,6 +165,35 @@ test("drops images from other sources but keeps favorites", async () => {
   assert.deepEqual(
     (await getAllImages()).map((entry) => entry.urlbase).sort(),
     ["wiki-1", "wiki-fav"],
+  );
+
+  await resetImages();
+});
+
+test("prunes images that only differ by localized urlbase", async () => {
+  await resetImages();
+  await putImage({ ...image("zh-variant", 1), source: "bing", imageKey: "OHR.Wolves" });
+  await putImage({ ...image("en-variant", 2), source: "bing", imageKey: "OHR.Wolves" });
+  await putImage({ ...image("other", 3), source: "bing", imageKey: "OHR.Other" });
+
+  assert.equal(await pruneDuplicateImages(), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase).sort(),
+    ["en-variant", "other"],
+  );
+
+  await resetImages();
+});
+
+test("never prunes a favorite duplicate", async () => {
+  await resetImages();
+  await putImage({ ...image("fav", 1), source: "bing", imageKey: "OHR.Wolves", favorite: true });
+  await putImage({ ...image("plain", 2), source: "bing", imageKey: "OHR.Wolves" });
+
+  assert.equal(await pruneDuplicateImages(), 1);
+  assert.deepEqual(
+    (await getAllImages()).map((entry) => entry.urlbase),
+    ["fav"],
   );
 
   await resetImages();

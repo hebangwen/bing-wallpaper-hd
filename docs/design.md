@@ -41,6 +41,8 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 
 多图源：`SOURCES` 暴露 `listImages()` 与 `imageUrl()`，Bing 走 `urlbase + 画质后缀`，Wikimedia 走每日 feed 并把 `thumbnail` 升到 1920px，避免下载几十 MB 原图。切换图源会删除其它源且未收藏的图片，保证新标签页展示的是当前源。
 
+去重：Bing 的 `urlbase` 带市场后缀，切换语言后同一张图会得到不同的 URL。记录用 `imageKey`（`OHR.*` 名称）标识图片，新记录命中已有 key 时就地更新标题而不重复下载；popup 展示与每次同步都会按 key 合并历史重复。
+
 多语言：界面文案存放在 `_locales/zh_CN` 与 `_locales/en`，运行时按 `language` 设置 fetch 对应 messages.json，HTML 用 `data-i18n*` 标记、JS 通过 `t()` 读取，因此切换语言后新标签页、popup、选项页与 Service Worker 都同步生效；manifest 的 `name` / `description` 仍用 `__MSG_*__`。语言设置同时决定 Bing 的 `mkt`。日期用 `Intl.DateTimeFormat` 按语言格式化，上午/下午来自文案表。
 
 高清图标需要读取任意最常访问站点的 HTML，`manifest.json` 声明 http/https 主机权限；SVG 不设像素下限，栅格图标至少 40px，低于该尺寸时保留 Chrome favicon。图标按 20px 展示。

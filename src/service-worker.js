@@ -1,10 +1,13 @@
 import { initI18n, t } from "./i18n.js";
+import { imageKeyOf } from "./images.js";
 import { fetchWithRetry } from "./network.js";
 import { getSource } from "./sources/index.js";
 import {
   deleteExpiredImages,
   deleteOldestImage,
   getImage,
+  getImageByKey,
+  pruneDuplicateImages,
   putImage,
 } from "./store.js";
 import {
@@ -84,6 +87,21 @@ async function downloadOne(entry, size, source) {
     return "skipped";
   }
 
+  const sameImage = existing
+    ? null
+    : await getImageByKey(imageKeyOf(entry));
+  if (sameImage) {
+    // 同一张图换了语言/市场，只更新文案，避免重复存一份。
+    await putImage({
+      ...sameImage,
+      imageKey: imageKeyOf(entry),
+      title: entry.title,
+      copyright: entry.copyright,
+      copyrightlink: entry.copyrightlink,
+    });
+    return "skipped";
+  }
+
   const response = await fetchWithRetry(source.imageUrl(entry, size), {
     timeoutMs: IMAGE_TIMEOUT_MS,
     retryDelaysMs: RETRY_DELAYS_MS,
@@ -94,6 +112,7 @@ async function downloadOne(entry, size, source) {
   await storeImage({
     ...entry,
     source: entry.source ?? source.id,
+    imageKey: imageKeyOf(entry),
     size,
     blob,
     ...(thumb ? { thumb } : {}),
@@ -107,6 +126,7 @@ async function downloadOne(entry, size, source) {
 async function syncWallpapers() {
   const settings = await loadSettings();
   await initI18n(settings.language);
+  await pruneDuplicateImages();
   await deleteExpiredImages(Date.now(), retentionMsFor(settings.retentionDays));
 
   const source = getSource(settings.source);

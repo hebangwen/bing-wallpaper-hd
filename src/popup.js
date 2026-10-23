@@ -1,4 +1,5 @@
 import { applyI18n, initI18n, t } from "./i18n.js";
+import { dedupeImages } from "./images.js";
 import { getPinned, setPinned } from "./pin.js";
 import { loadSettings } from "./settings.js";
 import { getAllImages, setFavorite } from "./store.js";
@@ -147,7 +148,7 @@ async function refresh() {
   ]);
 
   pinnedUrlbase = pinned;
-  images = [...allImages].sort(newestFirst);
+  images = dedupeImages(allImages).sort(newestFirst);
 
   const latest = images[0] ?? null;
   const pinnedImage = pinned ? images.find((image) => image.urlbase === pinned) : null;

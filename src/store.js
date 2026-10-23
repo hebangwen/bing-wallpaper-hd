@@ -1,8 +1,11 @@
+import { imageKeyOf } from "./images.js";
+
 const DB_NAME = "wallpapers";
 const STORE = "images";
 const FETCHED_AT_INDEX = "fetchedAt";
 const DATE_INDEX = "date";
-const DB_VERSION = 4;
+const IMAGE_KEY_INDEX = "imageKey";
+const DB_VERSION = 5;
 
 export const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -26,6 +29,24 @@ function openDatabase() {
       }
       if (!store.indexNames.contains(DATE_INDEX)) {
         store.createIndex(DATE_INDEX, "date");
+      }
+      if (!store.indexNames.contains(IMAGE_KEY_INDEX)) {
+        store.createIndex(IMAGE_KEY_INDEX, "imageKey");
+      }
+
+      // v5：给旧记录补上去重用的 imageKey。
+      if (event.oldVersion > 0 && event.oldVersion < 5) {
+        const request = store.openCursor();
+        request.onsuccess = () => {
+          const cursor = request.result;
+          if (!cursor) return;
+
+          const value = cursor.value;
+          if (!value.imageKey) {
+            cursor.update({ ...value, imageKey: imageKeyOf(value) });
+          }
+          cursor.continue();
+        };
       }
     };
     request.onsuccess = () => {
@@ -104,6 +125,12 @@ export function getImage(urlbase) {
   return transact("readonly", (store) => requestResult(store.get(urlbase)));
 }
 
+export function getImageByKey(key) {
+  return transact("readonly", (store) =>
+    requestResult(store.index(IMAGE_KEY_INDEX).getAll(key)).then((images) => images[0] ?? null),
+  );
+}
+
 export function getAllImages() {
   return transact("readonly", (store) => requestResult(store.getAll()));
 }
@@ -170,6 +197,39 @@ export function deleteOldestImage() {
     });
 
     return image;
+  });
+}
+
+// 同一张图可能因为切换语言存成不同 urlbase，这里按 imageKey 合并。
+export async function pruneDuplicateImages() {
+  const all = await getAllImages();
+  const groups = new Map();
+
+  for (const image of all) {
+    const key = `${image.source ?? "bing"}|${imageKeyOf(image)}`;
+    const list = groups.get(key) ?? [];
+    list.push(image);
+    groups.set(key, list);
+  }
+
+  const doomed = [];
+  for (const list of groups.values()) {
+    if (list.length < 2) continue;
+
+    const keep =
+      list.find((image) => image.favorite) ??
+      [...list].sort((a, b) => (b.fetchedAt ?? 0) - (a.fetchedAt ?? 0))[0];
+
+    for (const image of list) {
+      if (image !== keep && !image.favorite) doomed.push(image.urlbase);
+    }
+  }
+
+  if (doomed.length === 0) return 0;
+
+  return transact("readwrite", (store) => {
+    for (const urlbase of doomed) store.delete(urlbase);
+    return doomed.length;
   });
 }
 
