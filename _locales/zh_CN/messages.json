@@ -129,7 +129,7 @@
     "message": "图源"
   },
   "sourceHint": {
-    "message": "切换后下次更新生效，并清除未收藏的旧源图片；非 Bing 源使用 1920px 缩略图，最多回填 3 天。"
+    "message": "切换后下次更新生效，并清除未收藏的旧源图片；非 Bing 源每天取一张，Wallhaven 图片版权归原作者。"
   },
   "sourceBing": {
     "message": "Bing 每日一图"
@@ -268,5 +268,11 @@
   },
   "languageEn": {
     "message": "English"
+  },
+  "sourceWallhaven": {
+    "message": "Wallhaven 随机壁纸"
+  },
+  "sourcePicsum": {
+    "message": "Lorem Picsum 摄影"
   }
 }

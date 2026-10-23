@@ -1,10 +1,14 @@
 import { buildWallpaperUrl, fetchArchive } from "../bing.js";
+import { listPicsum } from "./picsum.js";
+import { listWallhaven } from "./wallhaven.js";
 import { listWikimedia } from "./wikimedia.js";
 
 export const SOURCE_LABEL_KEYS = {
   bing: "sourceBing",
   "wikimedia-en": "sourceWikimediaEn",
   "wikimedia-zh": "sourceWikimediaZh",
+  wallhaven: "sourceWallhaven",
+  picsum: "sourcePicsum",
 };
 
 export const SOURCES = {
@@ -36,6 +40,28 @@ export const SOURCES = {
     supportsQuality: false,
     listImages({ count, now }) {
       return listWikimedia("zh", count, { now });
+    },
+    imageUrl(entry) {
+      return entry.downloadUrl;
+    },
+  },
+
+  wallhaven: {
+    id: "wallhaven",
+    supportsQuality: false,
+    listImages({ now }) {
+      return listWallhaven({ now });
+    },
+    imageUrl(entry) {
+      return entry.downloadUrl;
+    },
+  },
+
+  picsum: {
+    id: "picsum",
+    supportsQuality: false,
+    listImages({ now }) {
+      return listPicsum({ now });
     },
     imageUrl(entry) {
       return entry.downloadUrl;

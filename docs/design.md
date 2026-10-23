@@ -6,7 +6,7 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 | --- | --- |
 | `src/settings.js` | 设置默认值与校验：画质（预设或自定义宽高）、保留天数、更新时间、语言、图源、日期时间显示、模糊/暗化/毛玻璃；历史图画质上限 1080p；下一次运行时间 |
 | `src/bing.js` | Bing HPImageArchive 接口，解析归档（保留 `copyrightlink` / `drk`）；预设画质用原生资源，自定义宽高走 `&w=&h=&rs=1&c=4` 服务端缩放 |
-| `src/sources/*` | 图源适配层：Bing 归档、Wikimedia 每日图片（英文/中文，下载 1920px 缩略图）；统一返回 `urlbase`、`downloadUrl`、`source` |
+| `src/sources/*` | 图源适配层：Bing 归档、Wikimedia 每日图片（英文/中文，下载 1920px 缩略图）、Wallhaven 随机壁纸（SFW、16:9）、Picsum 每日摄影；统一返回 `urlbase`、`downloadUrl`、`source` |
 | `src/i18n.js` | `chrome.i18n` 封装：读取文案、按 `data-i18n` 填充 HTML、返回当前 UI 语言 |
 | `src/network.js` | 统一 `fetch` 超时与重试策略，供 Bing API 和图片下载复用 |
 | `src/thumbnail.js` | 在 Service Worker 中用 `OffscreenCanvas` 生成 640px WebP 缩略图；环境不支持时返回 `null`，界面回退原图 |

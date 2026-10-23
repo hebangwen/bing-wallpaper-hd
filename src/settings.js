@@ -3,7 +3,7 @@ export const QUALITIES = PRESET_QUALITIES;
 export const HISTORY_QUALITY = "1920x1080";
 export const LANGUAGES = ["auto", "zh-CN", "en"];
 export const DATE_STYLES = ["long", "numeric", "hidden"];
-export const SOURCE_IDS = ["bing", "wikimedia-en", "wikimedia-zh"];
+export const SOURCE_IDS = ["bing", "wikimedia-en", "wikimedia-zh", "wallhaven", "picsum"];
 export const MAX_BACKFILL_DAYS = 8;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 

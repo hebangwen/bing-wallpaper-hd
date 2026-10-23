@@ -214,9 +214,10 @@ function update(patch) {
       await initI18n(snapshot.language);
       applyI18n();
       applyToControls();
-      await chrome.runtime.sendMessage({ type: "reschedule" }).catch(() => {});
+      // 通知 Service Worker 重排闹钟；统计刷新放到后台，避免阻塞切换图源后的清理。
+      chrome.runtime.sendMessage({ type: "reschedule" }).catch(() => {});
       flash(t("saved"));
-      await refreshStats();
+      refreshStats().catch(() => {});
     })
     .catch((error) => {
       flash(String(error));

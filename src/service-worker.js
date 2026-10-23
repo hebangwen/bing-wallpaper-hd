@@ -78,6 +78,10 @@ async function storeImage(image) {
 }
 
 async function downloadOne(entry, size, source) {
+  // 切换图源后，正在跑的旧任务不再写入，避免旧源图片残留。
+  const current = await loadSettings();
+  if (current.source !== source.id) return "skipped";
+
   const existing = await getImage(entry.urlbase);
   // 1.1.x 只下载 UHD，没有 size 字段，按 UHD 处理避免升级后重复下载。
   const storedSize = existing?.size ?? "UHD";

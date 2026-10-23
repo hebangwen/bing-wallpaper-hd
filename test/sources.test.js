@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getSource } from "../src/sources/index.js";
+import { buildPicsumUrl, createPicsumEntry } from "../src/sources/picsum.js";
+import { buildWallhavenUrl, parseWallhaven } from "../src/sources/wallhaven.js";
 import {
   buildFeedUrl,
   listWikimedia,
@@ -68,6 +70,47 @@ test("lists at most three days and skips empty days", async () => {
     images.map((image) => image.date),
     ["20261023", "20261021"],
   );
+});
+
+test("builds a safe Wallhaven search", () => {
+  const url = new URL(buildWallhavenUrl());
+  assert.equal(url.searchParams.get("purity"), "100");
+  assert.equal(url.searchParams.get("categories"), "100");
+  assert.equal(url.searchParams.get("ratios"), "16x9");
+  assert.equal(url.searchParams.get("atleast"), "1920x1080");
+});
+
+test("parses the first Wallhaven result", () => {
+  const entry = parseWallhaven(
+    {
+      data: [
+        {
+          id: "abc",
+          path: "https://w.wallhaven.cc/full/ab/wallhaven-abc.jpg",
+          resolution: "2560x1440",
+          source: "NASA",
+          url: "https://wallhaven.cc/w/abc",
+        },
+      ],
+    },
+    "20261023",
+  );
+
+  assert.equal(entry.urlbase, "https://w.wallhaven.cc/full/ab/wallhaven-abc.jpg");
+  assert.equal(entry.title, "Wallhaven · 2560x1440");
+  assert.equal(entry.copyright, "NASA");
+  assert.equal(entry.source, "wallhaven");
+  assert.equal(entry.date, "20261023");
+  assert.equal(parseWallhaven({ data: [] }, "20261023"), null);
+});
+
+test("builds a deterministic Picsum entry", () => {
+  const entry = createPicsumEntry("20261023");
+
+  assert.equal(entry.urlbase, "https://picsum.photos/seed/20261023/1920/1080");
+  assert.equal(buildPicsumUrl("20261023"), entry.downloadUrl);
+  assert.equal(entry.source, "picsum");
+  assert.equal(entry.date, "20261023");
 });
 
 test("falls back to bing for unknown sources", () => {

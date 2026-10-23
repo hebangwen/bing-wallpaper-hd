@@ -129,7 +129,7 @@
     "message": "Source"
   },
   "sourceHint": {
-    "message": "Applied on the next update; unstarred images from other sources are removed. Non-Bing sources use 1920px thumbnails and backfill up to 3 days."
+    "message": "Applied on the next update; unstarred images from other sources are removed. Non-Bing sources fetch one image per day; Wallhaven images belong to their authors."
   },
   "sourceBing": {
     "message": "Bing daily image"
@@ -268,5 +268,11 @@
   },
   "languageEn": {
     "message": "English"
+  },
+  "sourceWallhaven": {
+    "message": "Wallhaven random wallpaper"
+  },
+  "sourcePicsum": {
+    "message": "Lorem Picsum photography"
   }
 }
