@@ -274,5 +274,8 @@
   },
   "sourcePicsum": {
     "message": "Lorem Picsum 摄影"
+  },
+  "updatingSource": {
+    "message": "正在更新图源…"
   }
 }

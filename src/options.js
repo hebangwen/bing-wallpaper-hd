@@ -248,8 +248,16 @@ applyToControls();
 await Promise.all([refreshStats(), loadPreviewImage()]);
 
 source.addEventListener("change", async () => {
-  await update({ source: source.value });
-  await deleteImagesExceptSource(source.value);
+  const next = source.value;
+  await update({ source: next });
+  await deleteImagesExceptSource(next);
+  await refreshStats();
+
+  flash(t("updatingSource"));
+  try {
+    await chrome.runtime.sendMessage({ type: "fetch-now" });
+    flash(t("saved"));
+  } catch {}
   await refreshStats();
   await loadPreviewImage();
 });

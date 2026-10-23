@@ -1,7 +1,7 @@
 import { formatDateLine, formatTime } from "./clock.js";
 import { applyI18n, currentLocale, initI18n, t } from "./i18n.js";
 import { captionFor, getPinned, pickDisplayImage, setPinned } from "./pin.js";
-import { getImage, getLatestImage } from "./store.js";
+import { getImage, getLatestImageBySource } from "./store.js";
 import { resolveSiteIcons } from "./site-icons.js";
 import { loadSettings } from "./settings.js";
 import { resolveTone } from "./tone.js";
@@ -69,9 +69,11 @@ document.addEventListener("keydown", (event) => {
 });
 
 let activeLanguage;
+let activeSource;
 const initialSettings = await loadSettings();
 await initI18n(initialSettings.language);
 activeLanguage = initialSettings.language;
+activeSource = initialSettings.source;
 applyI18n();
 buildEngineMenu();
 applyEngine((await chrome.storage.local.get("searchEngine")).searchEngine);
@@ -163,6 +165,11 @@ async function applySettings() {
     renderCaption();
   }
 
+  if (settings.source !== activeSource) {
+    activeSource = settings.source;
+    reloadForSource();
+  }
+
   applyEffects(settings);
 
   clock.hidden = !settings.showClock;
@@ -214,9 +221,10 @@ function renderCaption() {
 }
 
 async function showLatest() {
+  const settings = await loadSettings();
   const pinnedUrlbase = await getPinned();
   const pinnedImage = pinnedUrlbase ? await getImage(pinnedUrlbase) : null;
-  const latest = await getLatestImage();
+  const latest = await getLatestImageBySource(settings.source);
   const { image, pinned } = pickDisplayImage({ pinnedUrlbase, pinnedImage, latest });
   if (!image) return false;
 
@@ -235,16 +243,32 @@ async function showLatest() {
   return true;
 }
 
+async function fetchAndShow() {
+  let fetched = false;
+  try {
+    fetched = Boolean((await chrome.runtime.sendMessage({ type: "fetch-now" }))?.ok);
+  } catch {}
+
+  if (!fetched || !(await showLatest())) {
+    document.getElementById("caption").textContent = t("wallpaperFetchFailed");
+  }
+}
+
+// 切换图源后新图可能还在下载，短暂轮询几次再放弃。
+async function reloadForSource() {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      if (await showLatest()) return;
+    } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+
+  document.getElementById("caption").textContent = t("wallpaperFetchFailed");
+}
+
 try {
   if (!(await showLatest())) {
-    let fetched = false;
-    try {
-      fetched = Boolean((await chrome.runtime.sendMessage({ type: "fetch-now" }))?.ok);
-    } catch {}
-
-    if (!fetched || !(await showLatest())) {
-      document.getElementById("caption").textContent = t("wallpaperFetchFailed");
-    }
+    await fetchAndShow();
   }
 } catch {
   document.getElementById("caption").textContent = t("wallpaperReadFailed");

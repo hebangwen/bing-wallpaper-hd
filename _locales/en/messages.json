@@ -274,5 +274,8 @@
   },
   "sourcePicsum": {
     "message": "Lorem Picsum photography"
+  },
+  "updatingSource": {
+    "message": "Updating source…"
   }
 }

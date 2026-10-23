@@ -10,6 +10,7 @@ import {
   getAllImages,
   getImage,
   getLatestImage,
+  getLatestImageBySource,
   pruneDuplicateImages,
   putImage,
   setFavorite,
@@ -51,6 +52,18 @@ test("returns the newest image without loading the full stored set", async () =>
     (await getAllImages()).map((entry) => entry.urlbase),
     ["new"],
   );
+
+  await resetImages();
+});
+
+test("returns the newest image for the requested source", async () => {
+  await resetImages();
+  await putImage({ ...image("bing-1", 1), source: "bing", date: "20261022" });
+  await putImage({ ...image("picsum-1", 2), source: "picsum", date: "20261023" });
+
+  assert.equal((await getLatestImageBySource("bing")).urlbase, "bing-1");
+  assert.equal((await getLatestImageBySource("picsum")).urlbase, "picsum-1");
+  assert.equal(await getLatestImageBySource("wallhaven"), null);
 
   await resetImages();
 });

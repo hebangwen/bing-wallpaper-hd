@@ -21,6 +21,8 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 | `src/site-icons.js` | 读取站点声明的 SVG 或高分辨率图标，校验实际像素尺寸，按域名缓存 7 天；缓存按 TTL 和数量上限清理 |
 | `src/newtab.*` | 新标签页覆盖（`chrome_url_overrides`）：壁纸（优先固定图）、模糊/暗化/毛玻璃、时钟、色调自适应、搜索、最常访问站点 |
 
+图源切换：新标签页与 popup 按 `settings.source` 取图（`sourceDate` 复合索引），源变化时自动重载；切换源会清理旧源未收藏图片，正在运行的旧同步任务在下载完成后会再次校验源，避免迟到写入。
+
 存储单一真相源：图片记录只存 IndexedDB（`urlbase`、`blob`、`thumb`、`size`、`date`、`fetchedAt`、`favorite`、`title`、`copyright`、`copyrightlink`、`drk`）；`status` 只记录最近一次运行结果；`settings` 与 `pinnedUrlbase` 存 `chrome.storage.local`；`siteIcons` 存 `chrome.storage.local` 并受 TTL 与数量上限约束。
 
 固定壁纸：`pinnedUrlbase` 指向某条图片记录，新标签页优先展示它并加「已固定」前缀；固定时自动置 `favorite`，复用「收藏免清理」的保护链，取消收藏会同时解除固定。固定图被手动清除后，新标签页回退最新壁纸并自动清除失效指针。

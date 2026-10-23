@@ -4,7 +4,10 @@ import { getPinned, setPinned } from "./pin.js";
 import { loadSettings } from "./settings.js";
 import { getAllImages, setFavorite } from "./store.js";
 
-await initI18n((await loadSettings()).language);
+const initialSettings = await loadSettings();
+let activeLanguage = initialSettings.language;
+let activeSource = initialSettings.source;
+await initI18n(activeLanguage);
 applyI18n();
 
 const objectUrls = new Map();
@@ -150,6 +153,13 @@ async function refresh() {
   pinnedUrlbase = pinned;
   images = dedupeImages(allImages).sort(newestFirst);
 
+  const liveUrlbases = new Set(images.map((image) => image.urlbase));
+  for (const [urlbase, url] of objectUrls) {
+    if (liveUrlbases.has(urlbase)) continue;
+    URL.revokeObjectURL(url);
+    objectUrls.delete(urlbase);
+  }
+
   const latest = images[0] ?? null;
   const pinnedImage = pinned ? images.find((image) => image.urlbase === pinned) : null;
   selected =
@@ -171,6 +181,29 @@ addEventListener("pagehide", () => {
 });
 
 await refresh();
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+
+  if (changes.settings) {
+    const next = changes.settings.newValue ?? {};
+    if (next.source !== activeSource || next.language !== activeLanguage) {
+      activeSource = next.source;
+      activeLanguage = next.language;
+      initI18n(activeLanguage)
+        .then(() => {
+          applyI18n();
+          return refresh();
+        })
+        .catch(() => {});
+    }
+  }
+
+  // 同步完成后刷新，切换图源时能拿到新下载的图片。
+  if (changes.status) {
+    refresh().catch(() => {});
+  }
+});
 
 const historyStrip = document.getElementById("history");
 

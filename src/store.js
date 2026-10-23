@@ -5,7 +5,8 @@ const STORE = "images";
 const FETCHED_AT_INDEX = "fetchedAt";
 const DATE_INDEX = "date";
 const IMAGE_KEY_INDEX = "imageKey";
-const DB_VERSION = 5;
+const SOURCE_DATE_INDEX = "sourceDate";
+const DB_VERSION = 6;
 
 export const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -33,17 +34,23 @@ function openDatabase() {
       if (!store.indexNames.contains(IMAGE_KEY_INDEX)) {
         store.createIndex(IMAGE_KEY_INDEX, "imageKey");
       }
+      if (!store.indexNames.contains(SOURCE_DATE_INDEX)) {
+        store.createIndex(SOURCE_DATE_INDEX, ["source", "date"]);
+      }
 
-      // v5：给旧记录补上去重用的 imageKey。
-      if (event.oldVersion > 0 && event.oldVersion < 5) {
+      // v5/v6：给旧记录补上 imageKey 与 source，供去重和按源查询使用。
+      if (event.oldVersion > 0 && event.oldVersion < 6) {
         const request = store.openCursor();
         request.onsuccess = () => {
           const cursor = request.result;
           if (!cursor) return;
 
           const value = cursor.value;
-          if (!value.imageKey) {
-            cursor.update({ ...value, imageKey: imageKeyOf(value) });
+          const patch = {};
+          if (!value.source) patch.source = "bing";
+          if (!value.imageKey) patch.imageKey = imageKeyOf(value);
+          if (Object.keys(patch).length > 0) {
+            cursor.update({ ...value, ...patch });
           }
           cursor.continue();
         };
@@ -123,6 +130,15 @@ export function putImage(image) {
 
 export function getImage(urlbase) {
   return transact("readonly", (store) => requestResult(store.get(urlbase)));
+}
+
+export function getLatestImageBySource(source) {
+  return transact("readonly", (store) => {
+    const range = IDBKeyRange.bound([source, ""], [source, "\uffff"]);
+    return requestResult(store.index(SOURCE_DATE_INDEX).openCursor(range, "prev")).then(
+      (cursor) => cursor?.value ?? null,
+    );
+  });
 }
 
 export function getImageByKey(key) {

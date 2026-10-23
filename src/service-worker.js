@@ -111,6 +111,11 @@ async function downloadOne(entry, size, source) {
     retryDelaysMs: RETRY_DELAYS_MS,
   });
   const blob = await response.blob();
+
+  // 下载期间可能又切换了图源，丢弃迟到结果。
+  const latestSettings = await loadSettings();
+  if (latestSettings.source !== source.id) return "skipped";
+
   const thumb = await makeThumbnail(blob);
 
   await storeImage({
