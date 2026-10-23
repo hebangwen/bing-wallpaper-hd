@@ -155,12 +155,6 @@
   "customOption": {
     "message": "自定义…"
   },
-  "labelMarket": {
-    "message": "地区"
-  },
-  "marketHint": {
-    "message": "影响标题与版权文案的语言，图片通常相同。"
-  },
   "labelRetention": {
     "message": "保留天数"
   },
@@ -216,7 +210,7 @@
     "message": "毛玻璃面板"
   },
   "effectsHint": {
-    "message": "模糊让壁纸更柔和，暗化提升文字对比；毛玻璃作用于搜索框和时钟。"
+    "message": "模糊让壁纸更柔和，暗化提升文字对比；毛玻璃为整页叠加磨砂层。"
   },
   "sectionCache": {
     "message": "缓存"
@@ -259,5 +253,11 @@
   },
   "allDownloadFailed": {
     "message": "所有壁纸下载失败"
+  },
+  "labelLanguage": {
+    "message": "语言"
+  },
+  "languageHint": {
+    "message": "影响 Bing 壁纸标题与版权文案的语言，图片通常相同。"
   }
 }

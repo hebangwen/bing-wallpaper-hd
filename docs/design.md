@@ -37,7 +37,7 @@ Chrome MV3 扩展，零构建，原生 ES Module。各模块职责：
 
 日期时间：`clock.js` 只负责纯格式化，新标签页按设置渲染并每秒对齐整秒刷新，页面关闭时清理定时器；`chrome.storage.onChanged` 让设置改动在当前标签页立即生效。时钟不发起网络请求。
 
-壁纸效果：模糊与暗化写成 CSS 变量（`--wallpaper-blur`、`--wallpaper-dim`、`--wallpaper-scale`），模糊时同步放大避免边缘透出；暗化用 `body::after` 覆盖层；毛玻璃由 `data-glass="on"` 打开，作用于搜索框和时钟。选项页用缩略图做同款预览。
+壁纸效果：模糊与暗化写成 CSS 变量（`--wallpaper-blur`、`--wallpaper-dim`、`--wallpaper-scale`），模糊时同步放大避免边缘透出；暗化用 `body::after` 覆盖层；毛玻璃由 `data-glass="on"` 打开，通过 `body::before` 的 `backdrop-filter` 为整页叠加磨砂层，内容保持清晰。选项页用缩略图做同款预览。
 
 多图源：`SOURCES` 暴露 `listImages()` 与 `imageUrl()`，Bing 走 `urlbase + 画质后缀`，Wikimedia 走每日 feed 并把 `thumbnail` 升到 1920px，避免下载几十 MB 原图。切换图源会删除其它源且未收藏的图片，保证新标签页展示的是当前源。
 

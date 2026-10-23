@@ -15,12 +15,29 @@ body {
   transform: scale(var(--wallpaper-scale, 1));
 }
 
-/* 暗化遮罩位于壁纸与内容之间 */
-body::after {
+/* 整页毛玻璃：模糊壁纸本身，内容保持清晰 */
+body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(1.4);
+  transition: opacity 0.25s ease;
+}
+
+:root[data-glass="on"] body::before {
+  opacity: 1;
+}
+
+/* 暗化遮罩位于玻璃层与内容之间 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
   background: rgba(0, 0, 0, var(--wallpaper-dim, 0));
   pointer-events: none;
 }
@@ -29,7 +46,7 @@ body::after {
 #search,
 #top-sites,
 #caption {
-  z-index: 2;
+  z-index: 3;
 }
 
 #clock {
@@ -91,6 +108,7 @@ body::after {
 
 #engine {
   position: relative;
+  z-index: 20;
   border-right: 1px solid #dadce0;
   padding-right: 10px;
   margin-right: 2px;
@@ -115,6 +133,7 @@ body::after {
 
 #engine-menu {
   position: absolute;
+  z-index: 30;
   top: calc(100% + 14px);
   left: -12px;
   margin: 0;
@@ -262,30 +281,4 @@ body::after {
   #clock-date {
     font-size: 13px;
   }
-}
-
-/* 毛玻璃面板：搜索框与时钟 */
-:root[data-glass="on"] #search {
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(20px) saturate(1.5);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-:root[data-glass="on"] #search:focus-within {
-  background: rgba(255, 255, 255, 0.78);
-}
-
-:root[data-glass="on"] #clock {
-  padding: 16px 30px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
-}
-
-:root[data-glass="on"][data-tone="light"] #clock {
-  background: rgba(255, 255, 255, 0.42);
-  border-color: rgba(255, 255, 255, 0.6);
 }

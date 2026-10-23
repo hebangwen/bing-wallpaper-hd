@@ -155,12 +155,6 @@
   "customOption": {
     "message": "Custom…"
   },
-  "labelMarket": {
-    "message": "Region"
-  },
-  "marketHint": {
-    "message": "Affects the language of titles and copyright text; the image is usually the same."
-  },
   "labelRetention": {
     "message": "Retention"
   },
@@ -216,7 +210,7 @@
     "message": "Frosted glass panels"
   },
   "effectsHint": {
-    "message": "Blur softens the wallpaper, dim improves contrast; frosted glass applies to the search box and clock."
+    "message": "Blur softens the wallpaper, dim improves contrast; frosted glass adds a frosted layer over the whole page."
   },
   "sectionCache": {
     "message": "Cache"
@@ -259,5 +253,11 @@
   },
   "allDownloadFailed": {
     "message": "All wallpapers failed to download"
+  },
+  "labelLanguage": {
+    "message": "Language"
+  },
+  "languageHint": {
+    "message": "Language of the Bing title and copyright text; the image is usually the same."
   }
 }
